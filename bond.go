@@ -9,13 +9,17 @@ import (
 )
 
 // PublicKey stores an eddsa public key (to be used in gnark circuit)
-type PublicKey = eddsa.PublicKey
-type Signature = eddsa.Signature
+type PublicKeyParty = eddsa.PublicKey
+type PublicKeyCounterparty = eddsa.PublicKey
+type SignatureParty = eddsa.Signature
+type SignatureCounterparty = eddsa.Signature
 
 type eddsaCircuit struct {
-	PublicKey PublicKey         `gnark:",private"`
-	Signature Signature         `gnark:",private"`
-	Message   frontend.Variable `gnark:",private"`
+	PublicKeyParty        PublicKeyParty        `gnark:",private"`
+	PublicKeyCounterparty PublicKeyCounterparty `gnark:",private"`
+	SignatureParty        SignatureParty        `gnark:",private"`
+	SignatureCounterparty SignatureCounterparty `gnark:",private"`
+	Message               frontend.Variable     `gnark:",public"` //hash
 }
 
 func parseSignature(id ecc.ID, buf []byte) ([]byte, []byte, []byte, []byte) {
@@ -54,10 +58,13 @@ func (circuit *eddsaCircuit) Define(curveID ecc.ID, cs *frontend.ConstraintSyste
 	if err != nil {
 		return err
 	}
-	circuit.PublicKey.Curve = params
+	// verify the signature in the cs for Party
+	circuit.PublicKeyParty.Curve = params
+	eddsa.Verify(cs, circuit.SignatureParty, circuit.Message, circuit.PublicKeyParty)
 
-	// verify the signature in the cs
-	eddsa.Verify(cs, circuit.Signature, circuit.Message, circuit.PublicKey)
+	// verify the signature in the cs for Counterparty
+	circuit.PublicKeyCounterparty.Curve = params
+	eddsa.Verify(cs, circuit.SignatureCounterparty, circuit.Message, circuit.PublicKeyCounterparty)
 
 	return nil
 }

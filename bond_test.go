@@ -70,11 +70,19 @@ func TestBond(t *testing.T) {
 	src := rand.NewSource(0)
 	r := rand.New(src)
 
-	privKey, err := signature.EDDSA_BN254.New(r)
+	privKeyParty, err := signature.EDDSA_BN254.New(r)
 	if err != nil {
 		t.Fatal(err)
 	}
-	pubKey := privKey.Public()
+	pubKeyParty := privKeyParty.Public()
+
+	rCounterparty := rand.New(src)
+
+	privKeyCounterparty, err := signature.EDDSA_BN254.New(rCounterparty)
+	if err != nil {
+		t.Fatal(err)
+	}
+	pubKeyCounterparty := privKeyCounterparty.Public()
 
 	//get bond information from a file
 	jsonFile, err := os.Open("bond.json")
@@ -94,13 +102,13 @@ func TestBond(t *testing.T) {
 	msgBin := getMessageHash(bondStruct)
 
 	// generate signature
-	signature, err := privKey.Sign(msgBin[:], hFunc)
+	signatureParty, err := privKeyParty.Sign(msgBin[:], hFunc)
 	if err != nil {
 		t.Fatal(err)
 	}
 
 	// check if there is no problem in the signature
-	checkSig, err := pubKey.Verify(signature, msgBin[:], hFunc)
+	checkSig, err := pubKeyParty.Verify(signatureParty, msgBin[:], hFunc)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -108,35 +116,61 @@ func TestBond(t *testing.T) {
 		t.Fatal("Unexpected failed signature verification")
 	}
 
+	signatureCounterparty, err := privKeyCounterparty.Sign(msgBin[:], hFunc)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	// check if there is no problem in the signature
+	checkSigCounterparty, err := pubKeyCounterparty.Verify(signatureCounterparty, msgBin[:], hFunc)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if !checkSigCounterparty {
+		t.Fatal("Unexpected failed signature verification")
+	}
+
 	id := ecc.BN254
 
 	// create and compile the circuit for signature verification
 	var circuit eddsaCircuit
+
 	r1cs, err := frontend.Compile(id, backend.GROTH16, &circuit)
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	assert := groth16.NewAssert(t)
+	//assert := groth16.NewAssert(t)
 	// verification with the correct Message
 	{
 		var witness eddsaCircuit
 		witness.Message.Assign(msgBin)
 
-		pubkeyAx, pubkeyAy := parsePoint(id, pubKey.Bytes())
+		pubkeyAx, pubkeyAy := parsePoint(id, pubKeyParty.Bytes())
 		var pbAx, pbAy big.Int
 		pbAx.SetBytes(pubkeyAx)
 		pbAy.SetBytes(pubkeyAy)
-		witness.PublicKey.A.X.Assign(pubkeyAx)
-		witness.PublicKey.A.Y.Assign(pubkeyAy)
+		witness.PublicKeyParty.A.X.Assign(pubkeyAx)
+		witness.PublicKeyParty.A.Y.Assign(pubkeyAy)
 
-		sigRx, sigRy, sigS1, sigS2 := parseSignature(id, signature)
-		witness.Signature.R.X.Assign(sigRx)
-		witness.Signature.R.Y.Assign(sigRy)
-		witness.Signature.S1.Assign(sigS1)
-		witness.Signature.S2.Assign(sigS2)
+		sigRx, sigRy, sigS1, sigS2 := parseSignature(id, signatureParty)
+		witness.SignatureParty.R.X.Assign(sigRx)
+		witness.SignatureParty.R.Y.Assign(sigRy)
+		witness.SignatureParty.S1.Assign(sigS1)
+		witness.SignatureParty.S2.Assign(sigS2)
 
-		assert.SolvingSucceeded(r1cs, &witness) //3 - pub key, signature and message
+		pubkeyCounterpartyAx, pubkeyCounterpartyAy := parsePoint(id, pubKeyCounterparty.Bytes())
+		var pbCounterpartyAx, pbCounterpartyAy big.Int
+		pbCounterpartyAx.SetBytes(pubkeyCounterpartyAx)
+		pbCounterpartyAy.SetBytes(pubkeyCounterpartyAy)
+		witness.PublicKeyCounterparty.A.X.Assign(pubkeyCounterpartyAx)
+		witness.PublicKeyCounterparty.A.Y.Assign(pubkeyCounterpartyAy)
+
+		sigCounterpartyRx, sigCounterpartyRy, sigCounterpartyS1, sigCounterpartyS2 := parseSignature(id, signatureCounterparty)
+		witness.SignatureCounterparty.R.X.Assign(sigCounterpartyRx)
+		witness.SignatureCounterparty.R.Y.Assign(sigCounterpartyRy)
+		witness.SignatureCounterparty.S1.Assign(sigCounterpartyS1)
+		witness.SignatureCounterparty.S2.Assign(sigCounterpartyS2)
 
 		pk, vk, err := groth16.Setup(r1cs)
 
@@ -146,20 +180,24 @@ func TestBond(t *testing.T) {
 		}
 
 		proof, err := groth16.Prove(r1cs, pk, &witness)
+
 		fmt.Println(proof)
 		if err != nil {
 			t.Fatal(err)
 		}
 
 		// verify the proof
+		var witnessPublic eddsaCircuit
+		witnessPublic.Message.Assign(msgBin)
+
 		err = groth16.Verify(proof, vk, &witness)
 		if err != nil {
 			// invalid proof
 		}
 	}
 
-	// verification with incorrect Message
-	{
+	// verification with incorrect Message/*
+	/*	{
 		var witness eddsaCircuit
 		witness.Message.Assign("44717650746155748460101257525078853138837311576962212923649547644148297035979")
 
@@ -174,6 +212,6 @@ func TestBond(t *testing.T) {
 		witness.Signature.S2.Assign(sigS2)
 
 		assert.SolvingFailed(r1cs, &witness)
-	}
+	}*/
 
 }
