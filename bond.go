@@ -9,17 +9,15 @@ import (
 )
 
 // PublicKey stores an eddsa public key (to be used in gnark circuit)
-type PublicKeyParty = eddsa.PublicKey
-type PublicKeyCounterparty = eddsa.PublicKey
-type SignatureParty = eddsa.Signature
-type SignatureCounterparty = eddsa.Signature
+type PublicKey = eddsa.PublicKey
+type Signature = eddsa.Signature
 
 type eddsaCircuit struct {
-	PublicKeyParty        PublicKeyParty        `gnark:",private"`
-	PublicKeyCounterparty PublicKeyCounterparty `gnark:",private"`
-	SignatureParty        SignatureParty        `gnark:",private"`
-	SignatureCounterparty SignatureCounterparty `gnark:",private"`
-	Message               frontend.Variable     `gnark:",public"` //hash
+	PublicKeyParty        PublicKey         `gnark:",private"`
+	PublicKeyCounterparty PublicKey         `gnark:",private"`
+	SignatureParty        Signature         `gnark:",private"`
+	SignatureCounterparty Signature         `gnark:",private"`
+	Message               frontend.Variable `gnark:",public"` //hash
 }
 
 func parseSignature(id ecc.ID, buf []byte) ([]byte, []byte, []byte, []byte) {
