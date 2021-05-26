@@ -1,0 +1,12 @@
+{ "bonds": [ 
+  {
+    "isin": "CA29250NAT24",
+    "Ticker": "ENB 5.375 27-Sep-2077",
+    "yield":  "1.12",
+    "Size": 550000,
+    "Party": "JPM",
+    "Counterparty": "HSBC"
+    }
+  ]
+}
+
