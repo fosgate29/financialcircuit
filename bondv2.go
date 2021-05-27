@@ -6,12 +6,15 @@ import (
 	"github.com/consensys/gnark/std/hash/mimc"
 )
 
+// Yield could be private because if a big bank is trading it has a better yield
+// Depending in user cases and scenarios the Party and Counterparty should remain always private
+// Other attributes could be private or public depending on Party and Counterparty decisions.
 type bondCircuit struct {
 	Isin         frontend.Variable `gnark:",public"`
 	Ticker       frontend.Variable `gnark:",public"`
 	Yield        frontend.Variable `gnark:",public"`
 	Bondhash     frontend.Variable `gnark:",public"`
-	Size         frontend.Variable `gnark:",private"`
+	Size         frontend.Variable `gnark:",public"`
 	Party        frontend.Variable `gnark:",private"`
 	Counterparty frontend.Variable `gnark:",private"`
 }

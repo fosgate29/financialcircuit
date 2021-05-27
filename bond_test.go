@@ -135,13 +135,20 @@ func TestBond(t *testing.T) {
 	// create and compile the circuit for signature verification
 	var circuit eddsaCircuit
 
-	r1cs, err := frontend.Compile(id, backend.GROTH16, &circuit)
+	r1cs, err := frontend.Compile(id, backend.GROTH16, &circuit) //returns a math equation
 	if err != nil {
 		t.Fatal(err)
 	}
 
 	//assert := groth16.NewAssert(t)
 	// verification with the correct Message
+	/*
+		PublicKeyParty        PublicKey         `gnark:",private"`
+		PublicKeyCounterparty PublicKey         `gnark:",private"`
+		SignatureParty        Signature         `gnark:",private"`
+		SignatureCounterparty Signature         `gnark:",private"`
+		Message               frontend.Variable `gnark:",public"` //hash
+	*/
 	{
 		var witness eddsaCircuit
 		witness.Message.Assign(msgBin)
