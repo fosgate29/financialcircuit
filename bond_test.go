@@ -74,6 +74,7 @@ func TestBond(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
+	// returns a created public key
 	pubKeyParty := privKeyParty.Public()
 
 	rCounterparty := rand.New(src)
@@ -135,6 +136,7 @@ func TestBond(t *testing.T) {
 	// create and compile the circuit for signature verification
 	var circuit eddsaCircuit
 
+	// in this step we are sentding an empty circuit
 	r1cs, err := frontend.Compile(id, backend.GROTH16, &circuit) //returns a math equation
 	if err != nil {
 		t.Fatal(err)
@@ -179,25 +181,30 @@ func TestBond(t *testing.T) {
 		witness.SignatureCounterparty.S1.Assign(sigCounterpartyS1)
 		witness.SignatureCounterparty.S2.Assign(sigCounterpartyS2)
 
+		// gettiing the proofing key and verrification key
 		pk, vk, err := groth16.Setup(r1cs)
 
 		if err != nil {
 			t.Fatal(err)
 			fmt.Println(vk)
 		}
-
-		proof, err := groth16.Prove(r1cs, pk, &witness)
+		// witness is an object that holds PublicKeyParty, SignatureParty ..
+		proof, err := groth16.Prove(r1cs, pk, &witness) //the proof send to the smart contract
 
 		fmt.Println(proof)
 		if err != nil {
 			t.Fatal(err)
 		}
 
-		// verify the proof
+		// verify the proof with the same bond hash, and it was signed by
+		// Party and the Cpty
 		var witnessPublic eddsaCircuit
 		witnessPublic.Message.Assign(msgBin)
 
-		err = groth16.Verify(proof, vk, &witness)
+		// witnessPublic is the hash of the bond, which can be used in at any time
+		// to confirm what has been agreed and traded with the VK and the proof
+		err = groth16.Verify(proof, vk, &witnessPublic)
+
 		if err != nil {
 			// invalid proof
 		}
