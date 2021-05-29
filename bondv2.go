@@ -9,6 +9,7 @@ import (
 // Yield could be private because if a big bank is trading it has a better yield
 // Depending in user cases and scenarios the Party and Counterparty should remain always private
 // Other attributes could be private or public depending on Party and Counterparty decisions.
+// Time to create is around 8s (notebook) but it isn't an issue for Bonds.
 type bondCircuit struct {
 	Isin         frontend.Variable `gnark:",public"`
 	Ticker       frontend.Variable `gnark:",public"`

@@ -143,14 +143,6 @@ func TestBond(t *testing.T) {
 	}
 
 	//assert := groth16.NewAssert(t)
-	// verification with the correct Message
-	/*
-		PublicKeyParty        PublicKey         `gnark:",private"`
-		PublicKeyCounterparty PublicKey         `gnark:",private"`
-		SignatureParty        Signature         `gnark:",private"`
-		SignatureCounterparty Signature         `gnark:",private"`
-		Message               frontend.Variable `gnark:",public"` //hash
-	*/
 	{
 		var witness eddsaCircuit
 		witness.Message.Assign(msgBin)
@@ -201,6 +193,11 @@ func TestBond(t *testing.T) {
 		var witnessPublic eddsaCircuit
 		witnessPublic.Message.Assign(msgBin)
 
+		/* smart contract is going to receive proof and witness  (hash message)
+		   smart contract already has the vk, which was generate in the setup
+		   and doesn't change.
+		   for each bond we have one witness (one hash) and one proof. vk is always the same
+		*/
 		// witnessPublic is the hash of the bond, which can be used in at any time
 		// to confirm what has been agreed and traded with the VK and the proof
 		err = groth16.Verify(proof, vk, &witnessPublic)
