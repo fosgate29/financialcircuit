@@ -14,8 +14,18 @@ type bondCircuitv5 struct {
 
 func (circuit *bondCircuitv5) Define(curveID ecc.ID, cs *frontend.ConstraintSystem) error {
 
+	/*
+		If x3 is computed, circuit works.
+		If it doesn't have this computation, it fails with this error code:
+		runtime error: index out of range [0] with length 0
+
+		x3 := cs.Mul(circuit.AcceptedQuote, circuit.AcceptedQuote, circuit.AcceptedQuote)
+		fmt.Print(x3)
+	*/
+
 	cs.AssertIsEqual(circuit.AcceptedQuote, circuit.QuoteFromB)
-	/*if(QuoQuoteFromAteA < QuoteFromB){
+
+	/*if(QuoteFromA < QuoteFromB){
 		if(QuoteFromA < QuoteC){
 			Result = QuoteFromA
 		}
