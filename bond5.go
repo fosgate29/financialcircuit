@@ -1,6 +1,8 @@
 package financial
 
 import (
+	"fmt"
+
 	"github.com/consensys/gnark-crypto/ecc"
 	"github.com/consensys/gnark/frontend"
 )
@@ -8,8 +10,8 @@ import (
 type bondCircuitv5 struct {
 	AcceptedQuote frontend.Variable `gnark:",public"`  // 92.60
 	QuoteFromA    frontend.Variable `gnark:",private"` // 92.92
-	QuoteFromB    frontend.Variable `gnark:",private"` // 92.60 winner - least one
-	QuoteFromC    frontend.Variable `gnark:",private"` // 92.80
+	//QuoteFromB    frontend.Variable `gnark:",private"` // 92.60 winner - least one
+	//QuoteFromC    frontend.Variable `gnark:",private"` // 92.80
 }
 
 func (circuit *bondCircuitv5) Define(curveID ecc.ID, cs *frontend.ConstraintSystem) error {
@@ -22,8 +24,11 @@ func (circuit *bondCircuitv5) Define(curveID ecc.ID, cs *frontend.ConstraintSyst
 		x3 := cs.Mul(circuit.AcceptedQuote, circuit.AcceptedQuote, circuit.AcceptedQuote)
 		fmt.Print(x3)
 	*/
+	x2 := cs.Mul(circuit.AcceptedQuote, circuit.AcceptedQuote)
+	fmt.Print(x2)
+	fmt.Print("x2")
 
-	cs.AssertIsEqual(circuit.AcceptedQuote, circuit.QuoteFromB)
+	cs.AssertIsEqual(circuit.AcceptedQuote, circuit.QuoteFromA)
 
 	/*if(QuoteFromA < QuoteFromB){
 		if(QuoteFromA < QuoteC){
