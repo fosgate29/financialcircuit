@@ -22,12 +22,17 @@ func TestBondv5(t *testing.T) {
 
 	// Seting up
 	var witness bondCircuitv5
-	witness.AcceptedQuote.Assign(92)
-	witness.QuoteFromA.Assign(92)
+	witness.AcceptedQuote.Assign(93)
+	witness.QuoteFromA.Assign(97)
+	witness.QuoteFromB.Assign(93)
+	witness.QuoteFromC.Assign(94)
+	witness.WinnerQuote.Assign(93)
+	witness.Quote1.Assign(94)
+	witness.Quote2.Assign(97)
 
 	pk, vk, err := groth16.Setup(r1cs)
-	fmt.Print(pk)
-	fmt.Print(vk)
+	//fmt.Print(pk)
+	//fmt.Print(vk)
 
 	// Generate Proof
 	proof, err := groth16.Prove(r1cs, pk, &witness)
@@ -39,15 +44,19 @@ func TestBondv5(t *testing.T) {
 
 	//Check with a correct value and it returns NIL
 	var witnessCorrectValue bondCircuitv5
-	witnessCorrectValue.AcceptedQuote.Assign(92)
+	witnessCorrectValue.AcceptedQuote.Assign(95)
 
 	err = groth16.Verify(proof, vk, &witnessCorrectValue)
-	fmt.Print(err)
+	if err != nil {
+		fmt.Print(err)
+	}
 
-	var witnessWrongValue bondCircuitv5
+	/*var witnessWrongValue bondCircuitv5
 	witnessWrongValue.AcceptedQuote.Assign(90)
 
 	err = groth16.Verify(proof, vk, &witnessWrongValue)
-	fmt.Print(err)
-
+	if err != nil {
+		fmt.Print("Error - ")
+		fmt.Print(err)
+	}*/
 }
