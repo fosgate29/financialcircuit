@@ -2,7 +2,9 @@ package financial
 
 import (
 	"github.com/consensys/gnark-crypto/ecc"
+	edwardsbn254 "github.com/consensys/gnark-crypto/ecc/bn254/twistededwards"
 	"github.com/consensys/gnark/frontend"
+	"github.com/consensys/gnark/std/algebra/twistededwards"
 	"github.com/consensys/gnark/std/signature/eddsa"
 )
 
@@ -10,21 +12,51 @@ import (
 type PublicKey = eddsa.PublicKey
 type Signature = eddsa.Signature
 
+func parseSignature(id ecc.ID, buf []byte) ([]byte, []byte, []byte, []byte) {
+
+	var pointbn254 edwardsbn254.PointAffine
+
+	switch id {
+	case ecc.BN254:
+		pointbn254.SetBytes(buf[:32])
+		a, b := parsePoint(id, buf)
+		s1 := buf[32:48] // r is 256 bits, so s = 2^128*s1 + s2
+		s2 := buf[48:]
+		return a[:], b[:], s1, s2
+	default:
+		return buf, buf, buf, buf
+	}
+}
+
+func parsePoint(id ecc.ID, buf []byte) ([]byte, []byte) {
+	var pointbn254 edwardsbn254.PointAffine
+
+	switch id {
+	case ecc.BN254:
+		pointbn254.SetBytes(buf[:32])
+		a := pointbn254.X.Bytes()
+		b := pointbn254.Y.Bytes()
+		return a[:], b[:]
+	default:
+		return buf, buf
+	}
+}
+
 type bondCircuitv5 struct {
 	//Bid 92.63
 	AcceptedQuote frontend.Variable `gnark:",public"` // 92.64
-	/*PublicKeyA    PublicKey         `gnark:",public"`
+	PublicKeyA    PublicKey         `gnark:",public"`
 	PublicKeyB    PublicKey         `gnark:",public"`
 	PublicKeyC    PublicKey         `gnark:",public"`
 	SignatureA    Signature         `gnark:",private"`
 	SignatureB    Signature         `gnark:",private"`
-	SignatureC    Signature         `gnark:",private"`*/
-	QuoteFromA  frontend.Variable `gnark:",private"` // 92.63
-	QuoteFromB  frontend.Variable `gnark:",private"` // 92.70 winner - least one
-	QuoteFromC  frontend.Variable `gnark:",private"` // 92.80*/
-	WinnerQuote frontend.Variable `gnark:",private"` // 92.63
-	Quote1      frontend.Variable `gnark:",private"` // 92.70 winner - least one
-	Quote2      frontend.Variable `gnark:",private"` // 92.80*/
+	SignatureC    Signature         `gnark:",private"`
+	QuoteFromA    frontend.Variable `gnark:",private"` // 92.63
+	QuoteFromB    frontend.Variable `gnark:",private"` // 92.70 winner - least one
+	QuoteFromC    frontend.Variable `gnark:",private"` // 92.80*/
+	WinnerQuote   frontend.Variable `gnark:",private"` // 92.63
+	Quote1        frontend.Variable `gnark:",private"` // 92.70 winner - least one
+	Quote2        frontend.Variable `gnark:",private"` // 92.80*/
 }
 
 func (circuit *bondCircuitv5) Define(curveID ecc.ID, cs *frontend.ConstraintSystem) error {
@@ -49,6 +81,21 @@ func (circuit *bondCircuitv5) Define(curveID ecc.ID, cs *frontend.ConstraintSyst
 
 	one := cs.Constant(1)
 	cs.AssertIsEqual(result, one) //
+
+	params, err := twistededwards.NewEdCurve(curveID)
+	if err != nil {
+		return err
+	}
+
+	// verify the signature in the cs for A,B,C
+	circuit.PublicKeyA.Curve = params
+	eddsa.Verify(cs, circuit.SignatureA, circuit.QuoteFromA, circuit.PublicKeyA)
+
+	circuit.PublicKeyB.Curve = params
+	eddsa.Verify(cs, circuit.SignatureB, circuit.QuoteFromB, circuit.PublicKeyB)
+
+	circuit.PublicKeyC.Curve = params
+	eddsa.Verify(cs, circuit.SignatureC, circuit.QuoteFromC, circuit.PublicKeyC)
 
 	/*
 		Proof a,b and C sent value using signture and pub key
