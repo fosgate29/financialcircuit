@@ -132,7 +132,7 @@ func TestBondv5(t *testing.T) {
 	}
 	//Check with a correct value and it returns NIL
 	var witnessCorrectValue bondCircuitv5
-	witnessCorrectValue.AcceptedQuote.Assign(92)
+	witnessCorrectValue.AcceptedQuote.Assign(95)
 
 	witnessCorrectValue.PublicKeyA.A.X.Assign(pubkeyAx)
 	witnessCorrectValue.PublicKeyA.A.Y.Assign(pubkeyAy)

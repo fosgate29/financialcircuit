@@ -9,6 +9,7 @@ import (
 )
 
 // PublicKey stores an eddsa public key (to be used in gnark circuit)
+//required to verify signatures in gnark
 type PublicKey = eddsa.PublicKey
 type Signature = eddsa.Signature
 
@@ -42,8 +43,10 @@ func parsePoint(id ecc.ID, buf []byte) ([]byte, []byte) {
 	}
 }
 
+// this structure declares the public inputs and secrets keys
 type bondCircuitv5 struct {
-	//Bid 92.63
+	//Accepted Bid 92.63 by the 2 parties prior to creating the circuit
+	//Before the circuit is build the initiator knows  the responder whos bid was accepted
 	AcceptedQuote frontend.Variable `gnark:",public"` // 92.64
 	PublicKeyA    PublicKey         `gnark:",public"`
 	PublicKeyB    PublicKey         `gnark:",public"`
@@ -61,12 +64,13 @@ type bondCircuitv5 struct {
 
 func (circuit *bondCircuitv5) Define(curveID ecc.ID, cs *frontend.ConstraintSystem) error {
 
-	//Make sure Winner Quote is the smallest one
+	//Make sure Winner Quote is the smallest one or matching the bid
 	cs.AssertIsLessOrEqual(circuit.WinnerQuote, circuit.Quote1)
 	cs.AssertIsLessOrEqual(circuit.WinnerQuote, circuit.Quote2)
 	cs.AssertIsEqual(circuit.WinnerQuote, circuit.AcceptedQuote)
 
 	//If winner quote is from A, B or C, one of the subtraction is going to return zero
+	// The circuit is build with all quotes received from responders
 	subA := cs.Sub(circuit.QuoteFromA, circuit.WinnerQuote)
 	subB := cs.Sub(circuit.QuoteFromB, circuit.WinnerQuote)
 	subC := cs.Sub(circuit.QuoteFromC, circuit.WinnerQuote)
@@ -94,6 +98,7 @@ func (circuit *bondCircuitv5) Define(curveID ecc.ID, cs *frontend.ConstraintSyst
 	circuit.PublicKeyB.Curve = params
 	eddsa.Verify(cs, circuit.SignatureB, circuit.QuoteFromB, circuit.PublicKeyB)
 
+	//verify signatures of each responder that participated in the RFQ
 	circuit.PublicKeyC.Curve = params
 	eddsa.Verify(cs, circuit.SignatureC, circuit.QuoteFromC, circuit.PublicKeyC)
 
