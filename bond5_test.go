@@ -2,7 +2,6 @@ package financial
 
 import (
 	"bytes"
-	"crypto/sha256"
 	"encoding/json"
 	"fmt"
 	"math/big"
@@ -30,11 +29,14 @@ func TestBondv5(t *testing.T) {
 	bond.Isin = "CA29250NAT24"
 	reqBodyBytes := new(bytes.Buffer)
 	json.NewEncoder(reqBodyBytes).Encode(bond)
-	h := sha256.New()
-	h.Write([]byte(reqBodyBytes.Bytes()))
-	var IsinHash = h.Sum([]byte{})
 
-	fmt.Print(IsinHash)
+	hashFunc := hash.MIMC_BN254
+
+	goMimc := hashFunc.New("seed")
+	goMimc.Write([]byte(reqBodyBytes.Bytes()))
+	var IsinHash = goMimc.Sum(nil)
+
+	//fmt.Print(IsinHash)
 
 	var circuit bondCircuitv5
 
@@ -51,10 +53,12 @@ func TestBondv5(t *testing.T) {
 
 	// Create a private/pub key to sign
 	hFunc := hash.MIMC_BN254.New("seed")
-	src := rand.NewSource(0)
-	rA := rand.New(src)
-	rB := rand.New(src)
-	rC := rand.New(src)
+	src1 := rand.NewSource(1)
+	src2 := rand.NewSource(2)
+	src3 := rand.NewSource(3)
+	rA := rand.New(src1)
+	rB := rand.New(src2)
+	rC := rand.New(src3)
 
 	privKeyA, err := signature.EDDSA_BN254.New(rA)
 	pubKeyA := privKeyA.Public()
@@ -70,10 +74,11 @@ func TestBondv5(t *testing.T) {
 	//Set values for quotes from A,B and C
 	var quoteA big.Int
 	quoteA.SetString("92", 10)
-	h = sha256.New()
-	h.Write([]byte(IsinHash))
-	h.Write([]byte(quoteA.Bytes()))
-	var QuoteFromAHashed = h.Sum([]byte{})
+
+	goMimc.Reset()
+	goMimc.Write([]byte(IsinHash))
+	goMimc.Write([]byte(quoteA.Bytes()))
+	var QuoteFromAHashed = goMimc.Sum(nil)
 
 	//fmt.Print(QuoteFromAHashed)
 	QuoteFromA := quoteA.Bytes()
@@ -81,20 +86,20 @@ func TestBondv5(t *testing.T) {
 
 	var quoteB big.Int
 	quoteB.SetString("94", 10)
-	h = sha256.New()
-	h.Write([]byte(IsinHash))
-	h.Write([]byte(quoteB.Bytes()))
-	var QuoteFromBHashed = h.Sum([]byte{})
+	goMimc.Reset()
+	goMimc.Write([]byte(IsinHash))
+	goMimc.Write([]byte(quoteB.Bytes()))
+	var QuoteFromBHashed = goMimc.Sum([]byte{})
 	//fmt.Print(QuoteFromBHashed)
 	QuoteFromB := quoteB.Bytes()
 	QuoteFromBHashed = QuoteFromB
 
 	var quoteC big.Int
 	quoteC.SetString("95", 10)
-	h = sha256.New()
-	h.Write([]byte(IsinHash))
-	h.Write([]byte(quoteC.Bytes()))
-	var QuoteFromCHashed = h.Sum([]byte{})
+	goMimc.Reset()
+	goMimc.Write([]byte(IsinHash))
+	goMimc.Write([]byte(quoteC.Bytes()))
+	var QuoteFromCHashed = goMimc.Sum([]byte{})
 	//fmt.Print(QuoteFromCHashed)
 	QuoteFromC := quoteC.Bytes()
 	QuoteFromCHashed = QuoteFromC
@@ -109,15 +114,51 @@ func TestBondv5(t *testing.T) {
 	var witness bondCircuitv5
 
 	witness.AcceptedQuote.Assign(92)
+	witness.Isin.Assign(IsinHash)
+
+	goMimc.Reset()
+	goMimc.Write([]byte(IsinHash))
+	goMimc.Write([]byte(quoteA.Bytes()))
+	var IsinQuoteAHashed = goMimc.Sum(nil)
+	IsinQuoteSignedA, err := privKeyA.Sign(IsinQuoteAHashed[:], hFunc)
+
+	goMimc.Reset()
+	goMimc.Write([]byte(IsinHash))
+	goMimc.Write([]byte(quoteB.Bytes()))
+	var IsinQuoteBHashed = goMimc.Sum(nil)
+	IsinQuoteSignedB, err := privKeyB.Sign(IsinQuoteBHashed[:], hFunc)
+
+	goMimc.Reset()
+	goMimc.Write([]byte(IsinHash))
+	goMimc.Write([]byte(quoteC.Bytes()))
+	var IsinQuoteCHashed = goMimc.Sum(nil)
+	IsinQuoteSignedC, err := privKeyC.Sign(IsinQuoteCHashed[:], hFunc)
+
+	sigRxt, sigRyt, sigS1t, sigS2t := parseSignature(id, IsinQuoteSignedA)
+	witness.IsinQuoteSignedA.R.X.Assign(sigRxt)
+	witness.IsinQuoteSignedA.R.Y.Assign(sigRyt)
+	witness.IsinQuoteSignedA.S1.Assign(sigS1t)
+	witness.IsinQuoteSignedA.S2.Assign(sigS2t)
+
+	sigRxt, sigRyt, sigS1t, sigS2t = parseSignature(id, IsinQuoteSignedB)
+	witness.IsinQuoteSignedB.R.X.Assign(sigRxt)
+	witness.IsinQuoteSignedB.R.Y.Assign(sigRyt)
+	witness.IsinQuoteSignedB.S1.Assign(sigS1t)
+	witness.IsinQuoteSignedB.S2.Assign(sigS2t)
+
+	sigRxt, sigRyt, sigS1t, sigS2t = parseSignature(id, IsinQuoteSignedC)
+	witness.IsinQuoteSignedC.R.X.Assign(sigRxt)
+	witness.IsinQuoteSignedC.R.Y.Assign(sigRyt)
+	witness.IsinQuoteSignedC.S1.Assign(sigS1t)
+	witness.IsinQuoteSignedC.S2.Assign(sigS2t)
 
 	//witness.AcceptedQuote.Assign(signatureA)
-	sigRx, sigRy, sigS1, sigS2 := parseSignature(id, signatureA)
+	/*sigRx, sigRy, sigS1, sigS2 := parseSignature(id, signatureA)
 	witness.AcceptedQuoteSignature.R.X.Assign(sigRx)
 	witness.AcceptedQuoteSignature.R.Y.Assign(sigRy)
 	witness.AcceptedQuoteSignature.S1.Assign(sigS1)
-	witness.AcceptedQuoteSignature.S2.Assign(sigS2)
+	witness.AcceptedQuoteSignature.S2.Assign(sigS2)*/
 
-	witness.IsinHash.Assign(IsinHash)
 	witness.WinnerQuote.Assign(92)
 	witness.Quote1.Assign(94)
 	witness.Quote2.Assign(95)
@@ -134,7 +175,7 @@ func TestBondv5(t *testing.T) {
 	witness.PublicKeyA.A.X.Assign(pubkeyAx)
 	witness.PublicKeyA.A.Y.Assign(pubkeyAy)
 
-	sigRx, sigRy, sigS1, sigS2 = parseSignature(id, signatureA)
+	sigRx, sigRy, sigS1, sigS2 := parseSignature(id, signatureA)
 	witness.SignatureA.R.X.Assign(sigRx)
 	witness.SignatureA.R.Y.Assign(sigRy)
 	witness.SignatureA.S1.Assign(sigS1)
@@ -168,8 +209,12 @@ func TestBondv5(t *testing.T) {
 	witness.SignatureC.S1.Assign(sigCS1)
 	witness.SignatureC.S2.Assign(sigCS2)
 
-	witness.WinnerPublicKey.A.X.Assign(pubkeyAx)
-	witness.WinnerPublicKey.A.Y.Assign(pubkeyAy)
+	//setting winner public key
+	/*pubkeyAx, pubkeyAy = parsePoint(id, pubKeyA.Bytes())
+	pbAx.SetBytes(pubkeyAx)
+	pbAy.SetBytes(pubkeyAy)
+	//witness.WinnerPublicKey.A.X.Assign(pubkeyAx)
+	//witness.WinnerPublicKey.A.Y.Assign(pubkeyAy)*/
 
 	// Generate Proof
 	proof, err := groth16.Prove(r1cs, pk, &witness)
@@ -186,14 +231,22 @@ func TestBondv5(t *testing.T) {
 	var witnessCorrectValue bondCircuitv5
 
 	witnessCorrectValue.AcceptedQuote.Assign(92)
-	witnessCorrectValue.IsinHash.Assign(IsinHash)
 
-	acceptedQuoteSignature, err := privKeyA.Sign(QuoteFromAHashed[:], hFunc)
+	bond.Isin = "CA29250NAT24"
+	reqBodyBytes = new(bytes.Buffer)
+	json.NewEncoder(reqBodyBytes).Encode(bond)
+
+	goMimc.Reset()
+	goMimc.Write([]byte(reqBodyBytes.Bytes()))
+	IsinHash = goMimc.Sum(nil)
+	witnessCorrectValue.Isin.Assign(IsinHash)
+
+	/*acceptedQuoteSignature, err := privKeyA.Sign(QuoteFromAHashed[:], hFunc)
 	sigRx, sigRy, sigS1, sigS2 = parseSignature(id, acceptedQuoteSignature)
 	witnessCorrectValue.AcceptedQuoteSignature.R.X.Assign(sigRx)
 	witnessCorrectValue.AcceptedQuoteSignature.R.Y.Assign(sigRy)
 	witnessCorrectValue.AcceptedQuoteSignature.S1.Assign(sigS1)
-	witnessCorrectValue.AcceptedQuoteSignature.S2.Assign(sigS2)
+	witnessCorrectValue.AcceptedQuoteSignature.S2.Assign(sigS2)*/
 
 	witnessCorrectValue.PublicKeyA.A.X.Assign(pubkeyAx)
 	witnessCorrectValue.PublicKeyA.A.Y.Assign(pubkeyAy)
@@ -208,13 +261,4 @@ func TestBondv5(t *testing.T) {
 	if err != nil {
 		fmt.Print(err)
 	}
-
-	/*var witnessWrongValue bondCircuitv5
-	witnessWrongValue.AcceptedQuote.Assign(90)
-
-	err = groth16.Verify(proof, vk, &witnessWrongValue)
-	if err != nil {
-		fmt.Print("Error - ")
-		fmt.Print(err)
-	}*/
 }
