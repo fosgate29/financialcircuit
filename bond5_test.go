@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"math/big"
 	"math/rand"
+	"strconv"
 	"testing"
 
 	"github.com/consensys/gnark-crypto/ecc"
@@ -21,6 +22,11 @@ import (
 
 type Bond struct {
 	Isin string
+}
+
+func setQuotesValue(valueA int, valueB int, valueC int, valueAccepted int, winnetValue int, quote1Value int, quote2Value int) [7]int {
+	toRet := [7]int{valueA, valueB, valueC, valueAccepted, winnetValue, quote1Value, quote2Value}
+	return toRet
 }
 
 func TestBondv5(t *testing.T) {
@@ -65,11 +71,15 @@ func TestBondv5(t *testing.T) {
 	privKeyC, err := signature.EDDSA_BN254.New(rC)
 	pubKeyC := privKeyC.Public()
 
+	// set values for all quotes
+	values := setQuotesValue(92, 94, 95, 92, 92, 94, 95)
+
 	/* Private and Public Key for A,B and C created */
 
 	//Set values for quotes from A,B and C
 	var quoteA big.Int
-	quoteA.SetString("92", 10)
+
+	quoteA.SetString(strconv.Itoa(values[0]), 10)
 	h = sha256.New()
 	h.Write([]byte(IsinHash))
 	h.Write([]byte(quoteA.Bytes()))
@@ -80,7 +90,7 @@ func TestBondv5(t *testing.T) {
 	QuoteFromAHashed = QuoteFromA
 
 	var quoteB big.Int
-	quoteB.SetString("94", 10)
+	quoteB.SetString(strconv.Itoa(values[1]), 10)
 	h = sha256.New()
 	h.Write([]byte(IsinHash))
 	h.Write([]byte(quoteB.Bytes()))
@@ -90,7 +100,7 @@ func TestBondv5(t *testing.T) {
 	QuoteFromBHashed = QuoteFromB
 
 	var quoteC big.Int
-	quoteC.SetString("95", 10)
+	quoteC.SetString(strconv.Itoa(values[2]), 10)
 	h = sha256.New()
 	h.Write([]byte(IsinHash))
 	h.Write([]byte(quoteC.Bytes()))
@@ -108,7 +118,7 @@ func TestBondv5(t *testing.T) {
 	// Seting up
 	var witness bondCircuitv5
 
-	witness.AcceptedQuote.Assign(92)
+	witness.AcceptedQuote.Assign(values[3])
 
 	//witness.AcceptedQuote.Assign(signatureA)
 	sigRx, sigRy, sigS1, sigS2 := parseSignature(id, signatureA)
@@ -118,9 +128,9 @@ func TestBondv5(t *testing.T) {
 	witness.AcceptedQuoteSignature.S2.Assign(sigS2)
 
 	witness.IsinHash.Assign(IsinHash)
-	witness.WinnerQuote.Assign(92)
-	witness.Quote1.Assign(94)
-	witness.Quote2.Assign(95)
+	witness.WinnerQuote.Assign(values[4])
+	witness.Quote1.Assign(values[5])
+	witness.Quote2.Assign(values[6])
 
 	witness.QuoteFromA.Assign(QuoteFromA)
 	witness.QuoteFromB.Assign(QuoteFromB)
