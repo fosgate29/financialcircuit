@@ -1,6 +1,9 @@
 package financial
 
 import (
+	"bytes"
+	"crypto/sha256"
+	"encoding/json"
 	"fmt"
 	"math/big"
 	"math/rand"
@@ -16,7 +19,22 @@ import (
 	"github.com/consensys/gnark/frontend"
 )
 
+type Bond struct {
+	Isin string
+}
+
 func TestBondv5(t *testing.T) {
+
+	//Isin hash
+	var bond Bond
+	bond.Isin = "CA29250NAT24"
+	reqBodyBytes := new(bytes.Buffer)
+	json.NewEncoder(reqBodyBytes).Encode(bond)
+	h := sha256.New()
+	h.Write([]byte(reqBodyBytes.Bytes()))
+	var IsinHash = h.Sum([]byte{})
+
+	fmt.Print(IsinHash)
 
 	var circuit bondCircuitv5
 
@@ -24,7 +42,9 @@ func TestBondv5(t *testing.T) {
 	r1cs, err := frontend.Compile(ecc.BN254, backend.GROTH16, &circuit)
 	pk, vk, err := groth16.Setup(r1cs)
 
-	fmt.Print((err))
+	if err != nil {
+		t.Fatal(err)
+	}
 
 	//setup signature parameters
 	signature.Register(signature.EDDSA_BN254, eddsabn254.GenerateKeyInterfaces)
@@ -50,25 +70,54 @@ func TestBondv5(t *testing.T) {
 	//Set values for quotes from A,B and C
 	var quoteA big.Int
 	quoteA.SetString("92", 10)
+	h = sha256.New()
+	h.Write([]byte(IsinHash))
+	h.Write([]byte(quoteA.Bytes()))
+	var QuoteFromAHashed = h.Sum([]byte{})
+
+	//fmt.Print(QuoteFromAHashed)
 	QuoteFromA := quoteA.Bytes()
+	QuoteFromAHashed = QuoteFromA
 
 	var quoteB big.Int
 	quoteB.SetString("94", 10)
+	h = sha256.New()
+	h.Write([]byte(IsinHash))
+	h.Write([]byte(quoteB.Bytes()))
+	var QuoteFromBHashed = h.Sum([]byte{})
+	//fmt.Print(QuoteFromBHashed)
 	QuoteFromB := quoteB.Bytes()
+	QuoteFromBHashed = QuoteFromB
 
 	var quoteC big.Int
 	quoteC.SetString("95", 10)
+	h = sha256.New()
+	h.Write([]byte(IsinHash))
+	h.Write([]byte(quoteC.Bytes()))
+	var QuoteFromCHashed = h.Sum([]byte{})
+	//fmt.Print(QuoteFromCHashed)
 	QuoteFromC := quoteC.Bytes()
+	QuoteFromCHashed = QuoteFromC
 
-	signatureA, err := privKeyA.Sign(QuoteFromA[:], hFunc)
-	signatureB, err := privKeyB.Sign(QuoteFromB[:], hFunc)
-	signatureC, err := privKeyC.Sign(QuoteFromC[:], hFunc)
+	signatureA, err := privKeyA.Sign(QuoteFromAHashed[:], hFunc)
+	signatureB, err := privKeyB.Sign(QuoteFromBHashed[:], hFunc)
+	signatureC, err := privKeyC.Sign(QuoteFromCHashed[:], hFunc)
 
 	id := ecc.BN254
 
 	// Seting up
 	var witness bondCircuitv5
+
 	witness.AcceptedQuote.Assign(92)
+
+	//witness.AcceptedQuote.Assign(signatureA)
+	sigRx, sigRy, sigS1, sigS2 := parseSignature(id, signatureA)
+	witness.AcceptedQuoteSignature.R.X.Assign(sigRx)
+	witness.AcceptedQuoteSignature.R.Y.Assign(sigRy)
+	witness.AcceptedQuoteSignature.S1.Assign(sigS1)
+	witness.AcceptedQuoteSignature.S2.Assign(sigS2)
+
+	witness.IsinHash.Assign(IsinHash)
 	witness.WinnerQuote.Assign(92)
 	witness.Quote1.Assign(94)
 	witness.Quote2.Assign(95)
@@ -85,7 +134,7 @@ func TestBondv5(t *testing.T) {
 	witness.PublicKeyA.A.X.Assign(pubkeyAx)
 	witness.PublicKeyA.A.Y.Assign(pubkeyAy)
 
-	sigRx, sigRy, sigS1, sigS2 := parseSignature(id, signatureA)
+	sigRx, sigRy, sigS1, sigS2 = parseSignature(id, signatureA)
 	witness.SignatureA.R.X.Assign(sigRx)
 	witness.SignatureA.R.Y.Assign(sigRy)
 	witness.SignatureA.S1.Assign(sigS1)
@@ -119,10 +168,13 @@ func TestBondv5(t *testing.T) {
 	witness.SignatureC.S1.Assign(sigCS1)
 	witness.SignatureC.S2.Assign(sigCS2)
 
+	witness.WinnerPublicKey.A.X.Assign(pubkeyAx)
+	witness.WinnerPublicKey.A.Y.Assign(pubkeyAy)
+
 	// Generate Proof
 	proof, err := groth16.Prove(r1cs, pk, &witness)
 
-	fmt.Println(proof)
+	//fmt.Println(proof)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -132,7 +184,16 @@ func TestBondv5(t *testing.T) {
 	}
 	//Check with a correct value and it returns NIL
 	var witnessCorrectValue bondCircuitv5
-	witnessCorrectValue.AcceptedQuote.Assign(95)
+
+	witnessCorrectValue.AcceptedQuote.Assign(92)
+	witnessCorrectValue.IsinHash.Assign(IsinHash)
+
+	acceptedQuoteSignature, err := privKeyA.Sign(QuoteFromAHashed[:], hFunc)
+	sigRx, sigRy, sigS1, sigS2 = parseSignature(id, acceptedQuoteSignature)
+	witnessCorrectValue.AcceptedQuoteSignature.R.X.Assign(sigRx)
+	witnessCorrectValue.AcceptedQuoteSignature.R.Y.Assign(sigRy)
+	witnessCorrectValue.AcceptedQuoteSignature.S1.Assign(sigS1)
+	witnessCorrectValue.AcceptedQuoteSignature.S2.Assign(sigS2)
 
 	witnessCorrectValue.PublicKeyA.A.X.Assign(pubkeyAx)
 	witnessCorrectValue.PublicKeyA.A.Y.Assign(pubkeyAy)
