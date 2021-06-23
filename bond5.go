@@ -48,25 +48,25 @@ func parsePoint(id ecc.ID, buf []byte) ([]byte, []byte) {
 type bondCircuitv5 struct {
 	//Accepted Bid 92.63 by the 2 parties prior to creating the circuit
 	//Before the circuit is build the initiator knows  the responder whos bid was accepted
-	AcceptedQuote frontend.Variable `gnark:",public"` // 92.64
-	//AcceptedQuoteSignature Signature         `gnark:",public"`
-	PublicKeyA PublicKey         `gnark:",public"`
-	PublicKeyB PublicKey         `gnark:",public"`
-	PublicKeyC PublicKey         `gnark:",public"`
-	Isin       frontend.Variable `gnark:",public"`
-	SignatureA Signature         `gnark:",private"`
-	SignatureB Signature         `gnark:",private"`
-	SignatureC Signature         `gnark:",private"`
-	QuoteFromA frontend.Variable `gnark:",private"` // 92.63
-	QuoteFromB frontend.Variable `gnark:",private"` // 92.70 winner - least one
-	QuoteFromC frontend.Variable `gnark:",private"` // 92.80*/
-	//WinnerPublicKey        PublicKey         `gnark:",private"`
-	WinnerQuote      frontend.Variable `gnark:",private"` // 92.63
-	Quote1           frontend.Variable `gnark:",private"` // 92.70 winner - least one
-	Quote2           frontend.Variable `gnark:",private"` // 92.80*/
-	IsinQuoteSignedA Signature         `gnark:",private"` // 92.80*/
-	IsinQuoteSignedB Signature         `gnark:",private"` // 92.80*/
-	IsinQuoteSignedC Signature         `gnark:",private"` // 92.80*/
+	AcceptedQuote       frontend.Variable `gnark:",public"` // 92.64
+	AcceptedQuoteSigned Signature         `gnark:",public"`
+	PublicKeyA          PublicKey         `gnark:",public"`
+	PublicKeyB          PublicKey         `gnark:",public"`
+	PublicKeyC          PublicKey         `gnark:",public"`
+	Isin                frontend.Variable `gnark:",public"`  // hash of Isin
+	SignatureA          Signature         `gnark:",private"` // isinhash + quote
+	SignatureB          Signature         `gnark:",private"` // isinhash + quote
+	SignatureC          Signature         `gnark:",private"` // isinhash + quote
+	QuoteFromA          frontend.Variable `gnark:",private"` // 92.63
+	QuoteFromB          frontend.Variable `gnark:",private"` // 92.70 winner - least one
+	QuoteFromC          frontend.Variable `gnark:",private"` // 92.80*/
+	WinnerQuotePubKey   PublicKey         `gnark:",private"` // It is going to be PublicKeyA or PublicKeyB or PublicKeyC
+	WinnerQuote         frontend.Variable `gnark:",private"` // 92.63
+	Quote1              frontend.Variable `gnark:",private"` // 92.70 winner - least one
+	Quote2              frontend.Variable `gnark:",private"` // 92.80*/
+	IsinQuoteSignedA    Signature         `gnark:",private"`
+	IsinQuoteSignedB    Signature         `gnark:",private"`
+	IsinQuoteSignedC    Signature         `gnark:",private"`
 }
 
 func (circuit *bondCircuitv5) Define(curveID ecc.ID, cs *frontend.ConstraintSystem) error {
@@ -98,19 +98,10 @@ func (circuit *bondCircuitv5) Define(curveID ecc.ID, cs *frontend.ConstraintSyst
 		return err
 	}
 
-	//isinHashQuoteA := mimc.Hash(cs, circuit.Isin, circuit.QuoteFromA)
-	//cs.Println(isinHashQuoteA)
-	//isinHashQuoteB := mimc.Hash(cs, circuit.Isin, circuit.QuoteFromB)*/
-	//isinHashQuoteC := mimc.Hash(cs, circuit.Isin, circuit.QuoteFromC)
+	circuit.WinnerQuotePubKey.Curve = params
+	eddsa.Verify(cs, circuit.AcceptedQuoteSigned, circuit.WinnerQuote, circuit.WinnerQuotePubKey)
 
 	// verify the signature in the cs for A,B,C
-	/*circuit.WinnerPublicKey.Curve = params
-	eddsa.Verify(cs, circuit.AcceptedQuoteSignature, isinHashWinnerQuote, circuit.PublicKeyC)*/
-
-	/*cs.Println(circuit.PublicKeyA)
-	cs.Println(circuit.PublicKeyB)
-	cs.Println(circuit.PublicKeyC)*/
-
 	circuit.PublicKeyA.Curve = params
 	eddsa.Verify(cs, circuit.SignatureA, circuit.QuoteFromA, circuit.PublicKeyA)
 
