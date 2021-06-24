@@ -24,10 +24,33 @@ type Bond struct {
 	Isin string
 }
 
-func setQuotesValue(valueA int, valueB int, valueC int, valueAccepted int, winnetValue int, quote1Value int, quote2Value int) [7]int {
-	toRet := [7]int{valueA, valueB, valueC, valueAccepted, winnetValue, quote1Value, quote2Value}
+// func setQuotesValue(valueA int, valueACents int, valueB int, valueBCents int, valueC int, valueCCents int, valueAccepted int, valueAcceptedCents int, winnerValue int, winnerValueCents int, quote1Value int, quote1ValueCents int, quote2Value int, quote2ValueCents int) [14]int {
+// 	toRet := [14]int{valueA, valueACents, valueB, valueBCents, valueC, valueCCents, winnerValue, winnerValueCents, valueAccepted, valueAcceptedCents, quote1Value, quote1ValueCents, quote2Value, quote2ValueCents}
+// 	return toRet
+// }
+
+func setQuotesValue(valueADollars int, valueACents int, valueBDollars int, valueBCents int, valueCDollars int, valueCCents int, valueAcceptedDollars int, valueAcceptedCents int, winnerValueDollars int, winnerValueCents int, quote1ValueDollars int, quote1ValueCents int, quote2ValueDollars int, quote2ValueCents int) [7]int {
+	toRet := [7]int{}
+	toRet[0] = (valueADollars * 100) + valueACents
+	toRet[1] = (valueBDollars * 100) + valueBCents
+	toRet[2] = (valueCDollars * 100) + valueCCents
+	toRet[3] = (valueAcceptedDollars * 100) + valueAcceptedCents
+	toRet[4] = (winnerValueDollars * 100) + winnerValueCents
+	toRet[5] = (quote1ValueDollars * 100) + quote1ValueCents
+	toRet[6] = (quote2ValueDollars * 100) + quote2ValueCents
+
 	return toRet
 }
+
+// func setQuotesValue(valueA float32, valueB float32, valueC float32, valueAccepted float32, winnetValue float32, quote1Value float32, quote2Value float32) [7]float32 {
+// 	toRet := [7]float32{valueA, valueB, valueC, valueAccepted, winnetValue, quote1Value, quote2Value}
+// 	return toRet
+// }
+
+// func parseFloat(value float32) string {
+// 	s := fmt.Sprintf("%f", value)
+// 	return s
+// }
 
 func TestBondv5(t *testing.T) {
 
@@ -72,7 +95,8 @@ func TestBondv5(t *testing.T) {
 	pubKeyC := privKeyC.Public()
 
 	// set values for all quotes
-	values := setQuotesValue(92, 94, 95, 92, 92, 94, 95)
+	values := setQuotesValue(92, 0, 92, 0, 92, 0, 92, 0, 92, 0, 92, 0, 92, 0)
+	fmt.Println(values)
 
 	/* Private and Public Key for A,B and C created */
 
