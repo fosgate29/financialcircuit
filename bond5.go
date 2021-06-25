@@ -48,9 +48,9 @@ func parsePoint(id ecc.ID, buf []byte) ([]byte, []byte) {
 type bondCircuitv5 struct {
 	//Accepted Bid 92.63 by the 2 parties prior to creating the circuit
 	//Before the circuit is build the initiator knows  the responder whos bid was accepted
-	AcceptedQuote       frontend.Variable `gnark:",public"` // 92.64
-	AcceptedQuoteSigned Signature         `gnark:",public"`
-	PublicKeyA          PublicKey         `gnark:",public"`
+	AcceptedQuote       frontend.Variable `gnark:",public"` // 92.63
+	AcceptedQuoteSigned Signature         `gnark:",public"` // to prevent spam
+	PublicKeyA          PublicKey         `gnark:",public"` // The reason for the public keys is to confirm who participated in providing quotes
 	PublicKeyB          PublicKey         `gnark:",public"`
 	PublicKeyC          PublicKey         `gnark:",public"`
 	Isin                frontend.Variable `gnark:",public"`  // hash of Isin
