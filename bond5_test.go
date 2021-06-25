@@ -95,7 +95,8 @@ func TestBondv5(t *testing.T) {
 	pubKeyC := privKeyC.Public()
 
 	// set values for all quotes
-	values := setQuotesValue(92, 0, 92, 0, 92, 0, 92, 0, 92, 0, 92, 0, 92, 0)
+	// it should be 93.2
+	values := setQuotesValue(92, 0, 93, 0, 94, 0, 92, 0, 92, 0, 93, 0, 94, 0)
 	fmt.Println(values)
 
 	/* Private and Public Key for A,B and C created */
@@ -219,7 +220,7 @@ func TestBondv5(t *testing.T) {
 	//Check with a correct value and it returns NIL
 	var witnessCorrectValue bondCircuitv5
 
-	witnessCorrectValue.AcceptedQuote.Assign(92)
+	witnessCorrectValue.AcceptedQuote.Assign(92 * 100)
 	witnessCorrectValue.IsinHash.Assign(IsinHash)
 
 	acceptedQuoteSignature, err := privKeyA.Sign(QuoteFromAHashed[:], hFunc)
