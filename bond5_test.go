@@ -37,7 +37,8 @@ func TestBondv5(t *testing.T) {
 	 */
 	var testCases = createTestCases()
 
-	for i := 0; i < 3; i++ {
+	// TODO - fix i - it should be size of testCases Array
+	for i := 0; i < 4; i++ {
 		fmt.Println("Test ", i)
 		testCase := testCases[i]
 		/*

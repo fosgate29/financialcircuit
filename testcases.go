@@ -22,9 +22,9 @@ type Bond struct {
 	Ticker string
 }
 
-func createTestCases() [3]TestCase {
+func createTestCases() [4]TestCase {
 
-	toRet := [3]TestCase{}
+	toRet := [4]TestCase{}
 
 	bond := &Bond{
 		Isin:   "CA29250NAT24",
@@ -34,8 +34,9 @@ func createTestCases() [3]TestCase {
 
 	// TODO - Quote A is always the winner, see how to change that
 	toRet[0] = getQuotesValue(bond, "92.63", "93.4", "90")
-	toRet[1] = getQuotesValue(bond, "92.63", "93.4", "94")
+	toRet[1] = getQuotesValue(bond, "92", "93.4", "94")
 	toRet[2] = getQuotesValue(bond, "92.63", "93.4", "94")
+	toRet[3] = getQuotesValue(bond, "92.63", "92.63", "92.63")
 
 	return toRet
 }
