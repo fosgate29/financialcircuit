@@ -33,9 +33,9 @@ func createTestCases() [4]TestCase {
 	}
 
 	// TODO - Quote A is always the winner, see how to change that
-	toRet[0] = getQuotesValue(bond, "92.63", "93.4", "90")
-	toRet[1] = getQuotesValue(bond, "92", "93.4", "94")
-	toRet[2] = getQuotesValue(bond, "92.63", "93.4", "94")
+	toRet[0] = getQuotesValue(bond, "92.63", "92.63", "95")    //test case 1
+	toRet[1] = getQuotesValue(bond, "91.71", "91.71", "91.71") // test case 2
+	toRet[2] = getQuotesValue(bond, "0", "0", "0")
 	toRet[3] = getQuotesValue(bond, "92.63", "92.63", "92.63")
 
 	return toRet

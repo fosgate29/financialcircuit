@@ -48,39 +48,39 @@ func parsePoint(id ecc.ID, buf []byte) ([]byte, []byte) {
 type bondCircuitv5 struct {
 	//Accepted Bid 92.63 by the 2 parties prior to creating the circuit
 	//Before the circuit is build the initiator knows  the responder whos bid was accepted
-	AcceptedQuote       frontend.Variable `gnark:",public"` // 92.63
-	AcceptedQuoteSigned Signature         `gnark:",public"` // to prevent spam
-	PublicKeyA          PublicKey         `gnark:",public"` // The reason for the public keys is to confirm who participated in providing quotes
-	PublicKeyB          PublicKey         `gnark:",public"`
-	PublicKeyC          PublicKey         `gnark:",public"`
-	Isin                frontend.Variable `gnark:",public"`  // hash of Isin
-	SignatureA          Signature         `gnark:",private"` // isinhash + quote
-	SignatureB          Signature         `gnark:",private"` // isinhash + quote
-	SignatureC          Signature         `gnark:",private"` // isinhash + quote
-	QuoteFromA          frontend.Variable `gnark:",private"` // 92.63
-	QuoteFromB          frontend.Variable `gnark:",private"` // 92.70 winner - least one
-	QuoteFromC          frontend.Variable `gnark:",private"` // 92.80*/
-	WinnerQuotePubKey   PublicKey         `gnark:",private"` // It is going to be PublicKeyA or PublicKeyB or PublicKeyC
-	WinnerQuote         frontend.Variable `gnark:",private"` // 92.63
-	Quote1              frontend.Variable `gnark:",private"` // 92.70 winner - least one
-	Quote2              frontend.Variable `gnark:",private"` // 92.80*/
-	IsinQuoteSignedA    Signature         `gnark:",private"`
-	IsinQuoteSignedB    Signature         `gnark:",private"`
-	IsinQuoteSignedC    Signature         `gnark:",private"`
+	AcceptedQuoteQuery  frontend.Variable `gnark:",public"`  // 92.63
+	AcceptedQuoteSigned Signature         `gnark:",public"`  // to prevent spam
+	PublicKeyCpt1       PublicKey         `gnark:",public"`  // Public key to check quotes signed - The reason for the public keys is to confirm who participated in providing quotes
+	PublicKeyCpt2       PublicKey         `gnark:",public"`  // Public key to check quotes signed
+	PublicKeyCpt3       PublicKey         `gnark:",public"`  // Public key to check quotes signed
+	Bond                frontend.Variable `gnark:",public"`  // hash of Isin, Ticker and Size
+	SignatureCpt1       Signature         `gnark:",private"` // Sign(quote)
+	SignatureCpt2       Signature         `gnark:",private"` // Sign(quote)
+	SignatureCpt3       Signature         `gnark:",private"` // Sign(quote)
+	QuoteFromCpt1       frontend.Variable `gnark:",private"` // Example: 92.63
+	QuoteFromCpt2       frontend.Variable `gnark:",private"` // Example: 92.40
+	QuoteFromCpt3       frontend.Variable `gnark:",private"` // Example: 93
+	AcceptedQuotePubKey PublicKey         `gnark:",private"` // It is going to be PublicKeyCpt1 or PublicKeyCpt2 or PublicKeyC
+	AcceptedQuote       frontend.Variable `gnark:",private"` // ig: 92.63
+	RejectedQuote1      frontend.Variable `gnark:",private"` // ig: 93 - Rejected quote order doesn't matter
+	RejectedQuote2      frontend.Variable `gnark:",private"` // ig: 92.40
+	BondQuoteSignedCpt1 Signature         `gnark:",private"` // Sign(Bond hash, quote)
+	BondQuoteSignedCpt2 Signature         `gnark:",private"` // Sign(Bond hash, quote)
+	BondQuoteSignedCpt3 Signature         `gnark:",private"` // Sign(Bond hash, quote)
 }
 
 func (circuit *bondCircuitv5) Define(curveID ecc.ID, cs *frontend.ConstraintSystem) error {
 
-	//Make sure Winner Quote is the smallest one or matching the bid
-	cs.AssertIsLessOrEqual(circuit.WinnerQuote, circuit.Quote1)
-	cs.AssertIsLessOrEqual(circuit.WinnerQuote, circuit.Quote2)
-	cs.AssertIsEqual(circuit.WinnerQuote, circuit.AcceptedQuote)
+	// Make sure Winner Quote is the smallest one or matching the bid
+	cs.AssertIsLessOrEqual(circuit.AcceptedQuote, circuit.RejectedQuote1)
+	cs.AssertIsLessOrEqual(circuit.AcceptedQuote, circuit.RejectedQuote2)
+	cs.AssertIsEqual(circuit.AcceptedQuote, circuit.AcceptedQuoteQuery)
 
-	//If winner quote is from A, B or C, one of the subtraction is going to return zero
+	// If winner quote is from Cpt1, Cpt2 or Cpt3, one of the subtraction is going to return zero
 	// The circuit is build with all quotes received from responders
-	subA := cs.Sub(circuit.QuoteFromA, circuit.WinnerQuote)
-	subB := cs.Sub(circuit.QuoteFromB, circuit.WinnerQuote)
-	subC := cs.Sub(circuit.QuoteFromC, circuit.WinnerQuote)
+	subA := cs.Sub(circuit.QuoteFromCpt1, circuit.AcceptedQuote)
+	subB := cs.Sub(circuit.QuoteFromCpt2, circuit.AcceptedQuote)
+	subC := cs.Sub(circuit.QuoteFromCpt3, circuit.AcceptedQuote)
 
 	outputA := cs.IsZero(subA, curveID) // 1 - iszero - true
 	outputB := cs.IsZero(subB, curveID) // 0 false
@@ -98,33 +98,33 @@ func (circuit *bondCircuitv5) Define(curveID ecc.ID, cs *frontend.ConstraintSyst
 		return err
 	}
 
-	circuit.WinnerQuotePubKey.Curve = params
-	eddsa.Verify(cs, circuit.AcceptedQuoteSigned, circuit.WinnerQuote, circuit.WinnerQuotePubKey)
+	circuit.AcceptedQuotePubKey.Curve = params
+	eddsa.Verify(cs, circuit.AcceptedQuoteSigned, circuit.AcceptedQuote, circuit.AcceptedQuotePubKey)
 
 	// verify the signature in the cs for A,B,C
-	circuit.PublicKeyA.Curve = params
-	eddsa.Verify(cs, circuit.SignatureA, circuit.QuoteFromA, circuit.PublicKeyA)
+	circuit.PublicKeyCpt1.Curve = params
+	eddsa.Verify(cs, circuit.SignatureCpt1, circuit.QuoteFromCpt1, circuit.PublicKeyCpt1)
 
-	circuit.PublicKeyB.Curve = params
-	eddsa.Verify(cs, circuit.SignatureB, circuit.QuoteFromB, circuit.PublicKeyB)
+	circuit.PublicKeyCpt2.Curve = params
+	eddsa.Verify(cs, circuit.SignatureCpt2, circuit.QuoteFromCpt2, circuit.PublicKeyCpt2)
 
-	circuit.PublicKeyC.Curve = params
-	eddsa.Verify(cs, circuit.SignatureC, circuit.QuoteFromC, circuit.PublicKeyC)
+	circuit.PublicKeyCpt3.Curve = params
+	eddsa.Verify(cs, circuit.SignatureCpt3, circuit.QuoteFromCpt3, circuit.PublicKeyCpt3)
 
 	//check Isin + quote
 	mimc, _ := mimc.NewMiMC("seed", curveID)
-	IsinQuoteFromAHash := mimc.Hash(cs, circuit.Isin, circuit.QuoteFromA)
-	IsinQuoteFromBHash := mimc.Hash(cs, circuit.Isin, circuit.QuoteFromB)
-	IsinQuoteFromCHash := mimc.Hash(cs, circuit.Isin, circuit.QuoteFromC)
+	IsinQuoteFromAHash := mimc.Hash(cs, circuit.Bond, circuit.QuoteFromCpt1)
+	IsinQuoteFromBHash := mimc.Hash(cs, circuit.Bond, circuit.QuoteFromCpt2)
+	IsinQuoteFromCHash := mimc.Hash(cs, circuit.Bond, circuit.QuoteFromCpt3)
 
-	circuit.PublicKeyA.Curve = params
-	eddsa.Verify(cs, circuit.IsinQuoteSignedA, IsinQuoteFromAHash, circuit.PublicKeyA)
+	circuit.PublicKeyCpt1.Curve = params
+	eddsa.Verify(cs, circuit.BondQuoteSignedCpt1, IsinQuoteFromAHash, circuit.PublicKeyCpt1)
 
-	circuit.PublicKeyB.Curve = params
-	eddsa.Verify(cs, circuit.IsinQuoteSignedB, IsinQuoteFromBHash, circuit.PublicKeyB)
+	circuit.PublicKeyCpt2.Curve = params
+	eddsa.Verify(cs, circuit.BondQuoteSignedCpt2, IsinQuoteFromBHash, circuit.PublicKeyCpt2)
 
-	circuit.PublicKeyC.Curve = params
-	eddsa.Verify(cs, circuit.IsinQuoteSignedC, IsinQuoteFromCHash, circuit.PublicKeyC)
+	circuit.PublicKeyCpt3.Curve = params
+	eddsa.Verify(cs, circuit.BondQuoteSignedCpt3, IsinQuoteFromCHash, circuit.PublicKeyCpt3)
 
 	return nil
 }
