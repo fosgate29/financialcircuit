@@ -40,8 +40,9 @@ func TestBondv5(t *testing.T) {
 	size := len(testCases)
 	// TODO - fix i - it should be size of testCases Array
 	for i := 0; i < size; i++ {
-		fmt.Println("Test ", i)
+
 		testCase := testCases[i]
+		fmt.Println("Test", i, "- Cpt1 Quote:", testCase.quoteNumberA, "- Cpt2 Quote:", testCase.quoteNumberB, "- Cpt3 Quote:", testCase.quoteNumberC)
 		/*
 		* Hash and Signatures
 		 */
@@ -83,9 +84,9 @@ func TestBondv5(t *testing.T) {
 		// Seting up
 		var witness bondCircuitv5
 
-		var IsinHash = testCase.isinTickerHash
-		witness.AcceptedQuoteQuery.Assign(testCase.winner)
-		witness.Bond.Assign(testCase.isinTickerHash)
+		var IsinHash = testCase.bondHash
+		witness.AcceptedQuoteQuery.Assign(testCase.acceptedQuote)
+		witness.Bond.Assign(testCase.bondHash)
 
 		goMimc.Reset()
 		goMimc.Write([]byte(IsinHash))
@@ -123,7 +124,7 @@ func TestBondv5(t *testing.T) {
 		witness.BondQuoteSignedCpt3.S1.Assign(sigS1t)
 		witness.BondQuoteSignedCpt3.S2.Assign(sigS2t)
 
-		AcceptedQuoteSigned, err := privKeyA.Sign(testCase.winner[:], hFunc)
+		AcceptedQuoteSigned, err := privKeyA.Sign(testCase.acceptedQuote[:], hFunc)
 
 		sigRx, sigRy, sigS1, sigS2 := parseSignature(id, AcceptedQuoteSigned)
 		witness.AcceptedQuoteSigned.R.X.Assign(sigRx)
@@ -131,7 +132,7 @@ func TestBondv5(t *testing.T) {
 		witness.AcceptedQuoteSigned.S1.Assign(sigS1)
 		witness.AcceptedQuoteSigned.S2.Assign(sigS2)
 
-		witness.AcceptedQuote.Assign(testCase.winner)
+		witness.AcceptedQuote.Assign(testCase.acceptedQuote)
 		witness.RejectedQuote1.Assign(testCase.quoteB)
 		witness.RejectedQuote2.Assign(testCase.quoteC)
 
@@ -187,7 +188,6 @@ func TestBondv5(t *testing.T) {
 		// Generate Proof
 		proof, err := groth16.Prove(r1cs, pk, &witness)
 
-		//fmt.Println(proof)
 		if err != nil {
 
 			fmt.Println("Test ", i, " failed.")
@@ -197,12 +197,12 @@ func TestBondv5(t *testing.T) {
 			//Check with a correct value and it returns NIL
 			var witnessCorrectValue bondCircuitv5
 
-			witnessCorrectValue.AcceptedQuoteQuery.Assign(testCase.winner)
+			witnessCorrectValue.AcceptedQuoteQuery.Assign(testCase.acceptedQuote)
 
-			IsinHash = testCase.isinTickerHash
+			IsinHash = testCase.bondHash
 			witnessCorrectValue.Bond.Assign(IsinHash)
 
-			AcceptedQuoteSigned, err = privKeyA.Sign(testCase.winner[:], hFunc)
+			AcceptedQuoteSigned, err = privKeyA.Sign(testCase.acceptedQuote[:], hFunc)
 			sigRx, sigRy, sigS1, sigS2 = parseSignature(id, AcceptedQuoteSigned)
 			witnessCorrectValue.AcceptedQuoteSigned.R.X.Assign(sigRx)
 			witnessCorrectValue.AcceptedQuoteSigned.R.Y.Assign(sigRy)

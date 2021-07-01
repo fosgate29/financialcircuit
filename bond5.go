@@ -71,6 +71,16 @@ type bondCircuitv5 struct {
 
 func (circuit *bondCircuitv5) Define(curveID ecc.ID, cs *frontend.ConstraintSystem) error {
 
+	// All quotes should be greater than zero
+	checkZero1 := cs.IsZero(circuit.QuoteFromCpt1, curveID)
+	checkZero2 := cs.IsZero(circuit.QuoteFromCpt2, curveID)
+	checkZero3 := cs.IsZero(circuit.QuoteFromCpt3, curveID)
+
+	checkZero_temp := cs.Or(checkZero1, checkZero2)
+	checkZero_result := cs.Or(checkZero_temp, checkZero3)
+
+	cs.AssertIsEqual(checkZero_result, 0)
+
 	// Make sure Winner Quote is the smallest one or matching the bid
 	cs.AssertIsLessOrEqual(circuit.AcceptedQuote, circuit.RejectedQuote1)
 	cs.AssertIsLessOrEqual(circuit.AcceptedQuote, circuit.RejectedQuote2)

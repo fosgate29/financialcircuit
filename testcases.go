@@ -9,11 +9,14 @@ import (
 )
 
 type TestCase struct {
-	quoteA         []byte
-	quoteB         []byte
-	quoteC         []byte
-	winner         []byte
-	isinTickerHash []byte
+	quoteA        []byte
+	quoteB        []byte
+	quoteC        []byte
+	acceptedQuote []byte
+	bondHash      []byte
+	quoteNumberA  string
+	quoteNumberB  string
+	quoteNumberC  string
 }
 
 type Bond struct {
@@ -22,9 +25,9 @@ type Bond struct {
 	Ticker string
 }
 
-func createTestCases() [4]TestCase {
+func createTestCases() [5]TestCase {
 
-	toRet := [4]TestCase{}
+	toRet := [5]TestCase{}
 
 	bond := &Bond{
 		Isin:   "CA29250NAT24",
@@ -32,11 +35,20 @@ func createTestCases() [4]TestCase {
 		Ticker: "ENB 5.375 27-Sep-2077",
 	}
 
-	// TODO - Quote A is always the winner, see how to change that
-	toRet[0] = getQuotesValue(bond, "92.63", "92.63", "95")    //test case 1
+	// TODO - Quote A is always the acepted quote, see how to change that
+	// 2nd parameter is always the accepted quote
+	toRet[0] = getQuotesValue(bond, "92.63", "92.63", "95")    // test case 1 - 2 quotes have same value.
 	toRet[1] = getQuotesValue(bond, "91.71", "91.71", "91.71") // test case 2
 	toRet[2] = getQuotesValue(bond, "0", "0", "0")
 	toRet[3] = getQuotesValue(bond, "92.63", "92.63", "92.63")
+
+	bond = &Bond{
+		Isin:   "CA29250NAT25",
+		Size:   "1550000",
+		Ticker: "ENB 5.375 27-Sep-1567",
+	}
+
+	toRet[4] = getQuotesValue(bond, "91.63", "92.63", "95.63")
 
 	return toRet
 }
@@ -70,10 +82,13 @@ func getQuotesValue(bond *Bond, quoteA string, quoteB string, quoteC string) Tes
 	quote2 = quote2.Mul(one100)
 
 	var testCase TestCase
+	testCase.quoteNumberA = quoteA
+	testCase.quoteNumberB = quoteB
+	testCase.quoteNumberC = quoteC
 	testCase.quoteA = quote0.BigInt().Bytes()
 	testCase.quoteB = quote1.BigInt().Bytes()
 	testCase.quoteC = quote2.BigInt().Bytes()
-	testCase.winner = quote0.BigInt().Bytes()
+	testCase.acceptedQuote = quote0.BigInt().Bytes()
 
 	reqBodyBytes := new(bytes.Buffer)
 	json.NewEncoder(reqBodyBytes).Encode(bond)
@@ -83,7 +98,7 @@ func getQuotesValue(bond *Bond, quoteA string, quoteB string, quoteC string) Tes
 	goMimc := hashFunc.New("seed")
 	goMimc.Write([]byte(reqBodyBytes.Bytes()))
 	var IsinHash = goMimc.Sum(nil)
-	testCase.isinTickerHash = IsinHash
+	testCase.bondHash = IsinHash
 
 	return testCase
 }
