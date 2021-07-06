@@ -25,9 +25,9 @@ type Bond struct {
 	Ticker string
 }
 
-func createTestCases() [5]TestCase {
+func createTestCases() [7]TestCase {
 
-	toRet := [5]TestCase{}
+	toRet := [7]TestCase{}
 
 	bond := &Bond{
 		Isin:   "CA29250NAT24",
@@ -37,10 +37,12 @@ func createTestCases() [5]TestCase {
 
 	// TODO - Quote A is always the acepted quote, see how to change that
 	// 2nd parameter is always the accepted quote
-	toRet[0] = getQuotesValue(bond, "92.63", "92.63", "95")    // test case 1 - 2 quotes have same value.
-	toRet[1] = getQuotesValue(bond, "91.71", "91.71", "91.71") // test case 2
-	toRet[2] = getQuotesValue(bond, "0", "0", "0")
-	toRet[3] = getQuotesValue(bond, "92.63", "92.63", "92.63")
+	toRet[0] = getQuotesValue(bond, "92.63", "92.63", "95")       // test case 1 - 2 quotes have same value.
+	toRet[1] = getQuotesValue(bond, "91.71", "91.71", "91.71")    // test case 2
+	toRet[2] = getQuotesValue(bond, "0", "0", "0")                // test case 10
+	toRet[3] = getQuotesValue(bond, "92.63", "92.63", "92.63")    // test case 2
+	toRet[4] = getQuotesValue(bond, "97.63", "94.63", "95.63")    // test case 8
+	toRet[5] = getQuotesValue(bond, "-97.63", "-94.63", "-95.63") // test case 11
 
 	bond = &Bond{
 		Isin:   "CA29250NAT25",
@@ -48,7 +50,7 @@ func createTestCases() [5]TestCase {
 		Ticker: "ENB 5.375 27-Sep-1567",
 	}
 
-	toRet[4] = getQuotesValue(bond, "91.63", "92.63", "95.63")
+	toRet[6] = getQuotesValue(bond, "91.63", "92.63", "95.63")
 
 	return toRet
 }
