@@ -45,7 +45,7 @@ func parsePoint(id ecc.ID, buf []byte) ([]byte, []byte) {
 }
 
 // this structure declares the public inputs and secrets keys
-type bondCircuitv5 struct {
+type bondCircuit struct {
 	//Accepted Bid 92.63 by the 2 parties prior to creating the circuit
 	//Before the circuit is build the initiator knows  the responder whos bid was accepted
 	AcceptedQuoteQuery  frontend.Variable `gnark:",public"`  // 92.63
@@ -69,7 +69,7 @@ type bondCircuitv5 struct {
 	BondQuoteSignedCpt3 Signature         `gnark:",private"` // Sign(Bond hash, quote)
 }
 
-func (circuit *bondCircuitv5) Define(curveID ecc.ID, cs *frontend.ConstraintSystem) error {
+func (circuit *bondCircuit) Define(curveID ecc.ID, cs *frontend.ConstraintSystem) error {
 
 	// All quotes should be greater than zero
 	checkZero1 := cs.IsZero(circuit.QuoteFromCpt1, curveID)

@@ -16,18 +16,18 @@ import (
 	"github.com/consensys/gnark/frontend"
 )
 
-func TestBondv5(t *testing.T) {
+func TestBondv(t *testing.T) {
 
 	/**
 	*  First step: Compile and Setup circuit.
 	 */
-	var circuit bondCircuitv5
+	var circuit bondCircuit
 	// compiles our circuit into a R1CS
 	fmt.Println("Compiling Bond circuit")
 	r1cs, err := frontend.Compile(ecc.BN254, backend.GROTH16, &circuit)
 	fmt.Println("Setting up circuit - it will take some time")
 	pk, vk, err := groth16.Setup(r1cs)
-	fmt.Println("pk and vk created. Now starting testing")
+	fmt.Println("pk and vk created. Now starting testing:")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -38,11 +38,12 @@ func TestBondv5(t *testing.T) {
 	var testCases = createTestCases()
 
 	size := len(testCases)
-	// TODO - fix i - it should be size of testCases Array
 	for i := 0; i < size; i++ {
 
 		testCase := testCases[i]
-		fmt.Println("Test", i, "- Cpt1 Quote:", testCase.quoteNumberA, "- Cpt2 Quote:", testCase.quoteNumberB, "- Cpt3 Quote:", testCase.quoteNumberC)
+		fmt.Println("Test", i, "- Cpt1 Quote:", testCase.quoteNumberCpt1, "- Cpt2 Quote:",
+			testCase.quoteNumberCpt2, "- Cpt3 Quote:",
+			testCase.quoteNumberCpt3, "-", testCase.message)
 		/*
 		* Hash and Signatures
 		 */
@@ -71,9 +72,9 @@ func TestBondv5(t *testing.T) {
 		/* Private and Public Key for A,B and C created */
 
 		//Set values for quotes from A,B and C
-		QuoteFromCpt1 := testCase.quoteA
-		QuoteFromCpt2 := testCase.quoteB
-		QuoteFromCpt3 := testCase.quoteC
+		QuoteFromCpt1 := testCase.quoteCpt1
+		QuoteFromCpt2 := testCase.quoteCpt2
+		QuoteFromCpt3 := testCase.quoteCpt3
 
 		signatureA, err := privKeyA.Sign(QuoteFromCpt1[:], hFunc)
 		signatureB, err := privKeyB.Sign(QuoteFromCpt2[:], hFunc)
@@ -82,7 +83,7 @@ func TestBondv5(t *testing.T) {
 		id := ecc.BN254
 
 		// Seting up
-		var witness bondCircuitv5
+		var witness bondCircuit
 
 		var IsinHash = testCase.bondHash
 		witness.AcceptedQuoteQuery.Assign(testCase.acceptedQuote)
@@ -90,21 +91,21 @@ func TestBondv5(t *testing.T) {
 
 		goMimc.Reset()
 		goMimc.Write([]byte(IsinHash))
-		goMimc.Write([]byte(testCase.quoteA))
-		var IsinQuoteAHashed = goMimc.Sum(nil)
-		BondQuoteSignedCpt1, err := privKeyA.Sign(IsinQuoteAHashed[:], hFunc)
+		goMimc.Write([]byte(testCase.quoteCpt1))
+		var IsinQuoteCpt1Hashed = goMimc.Sum(nil)
+		BondQuoteSignedCpt1, err := privKeyA.Sign(IsinQuoteCpt1Hashed[:], hFunc)
 
 		goMimc.Reset()
 		goMimc.Write([]byte(IsinHash))
-		goMimc.Write([]byte(testCase.quoteB))
-		var IsinQuoteBHashed = goMimc.Sum(nil)
-		BondQuoteSignedCpt2, err := privKeyB.Sign(IsinQuoteBHashed[:], hFunc)
+		goMimc.Write([]byte(testCase.quoteCpt2))
+		var IsinQuoteCpt2Hashed = goMimc.Sum(nil)
+		BondQuoteSignedCpt2, err := privKeyB.Sign(IsinQuoteCpt2Hashed[:], hFunc)
 
 		goMimc.Reset()
 		goMimc.Write([]byte(IsinHash))
-		goMimc.Write([]byte(testCase.quoteC))
-		var IsinQuoteCHashed = goMimc.Sum(nil)
-		BondQuoteSignedCpt3, err := privKeyC.Sign(IsinQuoteCHashed[:], hFunc)
+		goMimc.Write([]byte(testCase.quoteCpt3))
+		var IsinQuoteCpt3Hashed = goMimc.Sum(nil)
+		BondQuoteSignedCpt3, err := privKeyC.Sign(IsinQuoteCpt3Hashed[:], hFunc)
 
 		sigRxt, sigRyt, sigS1t, sigS2t := parseSignature(id, BondQuoteSignedCpt1)
 		witness.BondQuoteSignedCpt1.R.X.Assign(sigRxt)
@@ -133,8 +134,8 @@ func TestBondv5(t *testing.T) {
 		witness.AcceptedQuoteSigned.S2.Assign(sigS2)
 
 		witness.AcceptedQuote.Assign(testCase.acceptedQuote)
-		witness.RejectedQuote1.Assign(testCase.quoteB)
-		witness.RejectedQuote2.Assign(testCase.quoteC)
+		witness.RejectedQuote1.Assign(testCase.quoteCpt2)
+		witness.RejectedQuote2.Assign(testCase.quoteCpt3)
 
 		witness.QuoteFromCpt1.Assign(QuoteFromCpt1)
 		witness.QuoteFromCpt2.Assign(QuoteFromCpt2)
@@ -190,12 +191,12 @@ func TestBondv5(t *testing.T) {
 
 		if err != nil {
 
-			fmt.Println("Test ", i, " failed.")
+			fmt.Println("Test", i, "fails")
 
 		} else {
 
 			//Check with a correct value and it returns NIL
-			var witnessCorrectValue bondCircuitv5
+			var witnessCorrectValue bondCircuit
 
 			witnessCorrectValue.AcceptedQuoteQuery.Assign(testCase.acceptedQuote)
 
