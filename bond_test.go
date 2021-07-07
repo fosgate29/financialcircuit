@@ -56,18 +56,18 @@ func TestBondv(t *testing.T) {
 		src1 := rand.NewSource(1)
 		src2 := rand.NewSource(2)
 		src3 := rand.NewSource(3)
-		rA := rand.New(src1)
-		rB := rand.New(src2)
-		rC := rand.New(src3)
+		rCpt1 := rand.New(src1)
+		rCpt2 := rand.New(src2)
+		rCpt3 := rand.New(src3)
 
-		privKeyA, err := signature.EDDSA_BN254.New(rA)
-		pubKeyA := privKeyA.Public()
+		privKeyCpt1, err := signature.EDDSA_BN254.New(rCpt1)
+		pubKeyCpt1 := privKeyCpt1.Public()
 
-		privKeyB, err := signature.EDDSA_BN254.New(rB)
-		pubKeyB := privKeyB.Public()
+		privKeyCpt2, err := signature.EDDSA_BN254.New(rCpt2)
+		pubKeyBCpt2 := privKeyCpt2.Public()
 
-		privKeyC, err := signature.EDDSA_BN254.New(rC)
-		pubKeyC := privKeyC.Public()
+		privKeyCpt3, err := signature.EDDSA_BN254.New(rCpt3)
+		pubKeyCpt3 := privKeyCpt3.Public()
 
 		/* Private and Public Key for A,B and C created */
 
@@ -76,9 +76,9 @@ func TestBondv(t *testing.T) {
 		QuoteFromCpt2 := testCase.quoteCpt2
 		QuoteFromCpt3 := testCase.quoteCpt3
 
-		signatureA, err := privKeyA.Sign(QuoteFromCpt1[:], hFunc)
-		signatureB, err := privKeyB.Sign(QuoteFromCpt2[:], hFunc)
-		signatureC, err := privKeyC.Sign(QuoteFromCpt3[:], hFunc)
+		signatureCpt1, err := privKeyCpt1.Sign(QuoteFromCpt1[:], hFunc)
+		signatureCpt2, err := privKeyCpt2.Sign(QuoteFromCpt2[:], hFunc)
+		signatureCpt3, err := privKeyCpt3.Sign(QuoteFromCpt3[:], hFunc)
 
 		id := ecc.BN254
 
@@ -93,19 +93,19 @@ func TestBondv(t *testing.T) {
 		goMimc.Write([]byte(IsinHash))
 		goMimc.Write([]byte(testCase.quoteCpt1))
 		var IsinQuoteCpt1Hashed = goMimc.Sum(nil)
-		BondQuoteSignedCpt1, err := privKeyA.Sign(IsinQuoteCpt1Hashed[:], hFunc)
+		BondQuoteSignedCpt1, err := privKeyCpt1.Sign(IsinQuoteCpt1Hashed[:], hFunc)
 
 		goMimc.Reset()
 		goMimc.Write([]byte(IsinHash))
 		goMimc.Write([]byte(testCase.quoteCpt2))
 		var IsinQuoteCpt2Hashed = goMimc.Sum(nil)
-		BondQuoteSignedCpt2, err := privKeyB.Sign(IsinQuoteCpt2Hashed[:], hFunc)
+		BondQuoteSignedCpt2, err := privKeyCpt2.Sign(IsinQuoteCpt2Hashed[:], hFunc)
 
 		goMimc.Reset()
 		goMimc.Write([]byte(IsinHash))
 		goMimc.Write([]byte(testCase.quoteCpt3))
 		var IsinQuoteCpt3Hashed = goMimc.Sum(nil)
-		BondQuoteSignedCpt3, err := privKeyC.Sign(IsinQuoteCpt3Hashed[:], hFunc)
+		BondQuoteSignedCpt3, err := privKeyCpt3.Sign(IsinQuoteCpt3Hashed[:], hFunc)
 
 		sigRxt, sigRyt, sigS1t, sigS2t := parseSignature(id, BondQuoteSignedCpt1)
 		witness.BondQuoteSignedCpt1.R.X.Assign(sigRxt)
@@ -125,7 +125,7 @@ func TestBondv(t *testing.T) {
 		witness.BondQuoteSignedCpt3.S1.Assign(sigS1t)
 		witness.BondQuoteSignedCpt3.S2.Assign(sigS2t)
 
-		AcceptedQuoteSigned, err := privKeyA.Sign(testCase.acceptedQuote[:], hFunc)
+		AcceptedQuoteSigned, err := privKeyCpt1.Sign(testCase.acceptedQuote[:], hFunc)
 
 		sigRx, sigRy, sigS1, sigS2 := parseSignature(id, AcceptedQuoteSigned)
 		witness.AcceptedQuoteSigned.R.X.Assign(sigRx)
@@ -142,7 +142,7 @@ func TestBondv(t *testing.T) {
 		witness.QuoteFromCpt3.Assign(QuoteFromCpt3)
 
 		//A
-		pubkeyAx, pubkeyAy := parsePoint(id, pubKeyA.Bytes())
+		pubkeyAx, pubkeyAy := parsePoint(id, pubKeyCpt1.Bytes())
 		var pbAx, pbAy big.Int
 		pbAx.SetBytes(pubkeyAx)
 		pbAy.SetBytes(pubkeyAy)
@@ -152,35 +152,35 @@ func TestBondv(t *testing.T) {
 		witness.AcceptedQuotePubKey.A.X.Assign(pubkeyAx)
 		witness.AcceptedQuotePubKey.A.Y.Assign(pubkeyAy)
 
-		sigRx, sigRy, sigS1, sigS2 = parseSignature(id, signatureA)
+		sigRx, sigRy, sigS1, sigS2 = parseSignature(id, signatureCpt1)
 		witness.SignatureCpt1.R.X.Assign(sigRx)
 		witness.SignatureCpt1.R.Y.Assign(sigRy)
 		witness.SignatureCpt1.S1.Assign(sigS1)
 		witness.SignatureCpt1.S2.Assign(sigS2)
 
 		//B
-		pubkeyBAx, pubkeyBAy := parsePoint(id, pubKeyB.Bytes())
+		pubkeyBAx, pubkeyBAy := parsePoint(id, pubKeyBCpt2.Bytes())
 		var pbBAx, pbBAy big.Int
 		pbBAx.SetBytes(pubkeyBAx)
 		pbBAy.SetBytes(pubkeyBAy)
 		witness.PublicKeyCpt2.A.X.Assign(pubkeyBAx)
 		witness.PublicKeyCpt2.A.Y.Assign(pubkeyBAy)
 
-		sigBRx, sigBRy, sigBS1, sigBS2 := parseSignature(id, signatureB)
+		sigBRx, sigBRy, sigBS1, sigBS2 := parseSignature(id, signatureCpt2)
 		witness.SignatureCpt2.R.X.Assign(sigBRx)
 		witness.SignatureCpt2.R.Y.Assign(sigBRy)
 		witness.SignatureCpt2.S1.Assign(sigBS1)
 		witness.SignatureCpt2.S2.Assign(sigBS2)
 
 		//C
-		pubkeyCAx, pubkeyCAy := parsePoint(id, pubKeyC.Bytes())
+		pubkeyCAx, pubkeyCAy := parsePoint(id, pubKeyCpt3.Bytes())
 		var pbCAx, pbCAy big.Int
 		pbCAx.SetBytes(pubkeyCAx)
 		pbCAy.SetBytes(pubkeyCAy)
 		witness.PublicKeyCpt3.A.X.Assign(pubkeyCAx)
 		witness.PublicKeyCpt3.A.Y.Assign(pubkeyCAy)
 
-		sigCRx, sigCRy, sigCS1, sigCS2 := parseSignature(id, signatureC)
+		sigCRx, sigCRy, sigCS1, sigCS2 := parseSignature(id, signatureCpt3)
 		witness.SignatureCpt3.R.X.Assign(sigCRx)
 		witness.SignatureCpt3.R.Y.Assign(sigCRy)
 		witness.SignatureCpt3.S1.Assign(sigCS1)
@@ -203,7 +203,7 @@ func TestBondv(t *testing.T) {
 			IsinHash = testCase.bondHash
 			witnessCorrectValue.Bond.Assign(IsinHash)
 
-			AcceptedQuoteSigned, err = privKeyA.Sign(testCase.acceptedQuote[:], hFunc)
+			AcceptedQuoteSigned, err = privKeyCpt1.Sign(testCase.acceptedQuote[:], hFunc)
 			sigRx, sigRy, sigS1, sigS2 = parseSignature(id, AcceptedQuoteSigned)
 			witnessCorrectValue.AcceptedQuoteSigned.R.X.Assign(sigRx)
 			witnessCorrectValue.AcceptedQuoteSigned.R.Y.Assign(sigRy)
