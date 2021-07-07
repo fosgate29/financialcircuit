@@ -8,7 +8,7 @@ Writing zero-knowledge circuits using gnark to expand the existing library – F
 * [Baseline](https://github.com/eea-oasis/baseline)
 
 # Diagram
-![diagram](./DiagramZKP_Bond_RFQ.png)
+![diagram](./doc/DiagramZKP_Bond_RFQ.png)
 
 ## Run Tests
  `go test`

@@ -35,15 +35,21 @@ func createTestCases() [8]TestCase {
 		Size:   "550000",
 		Ticker: "ENB 5.375 27-Sep-2027",
 	}
-
+	i := 0
 	// TODO - Cpt1 Quote is always the acepted quote, see how to change that
 	// 2nd parameter is always the accepted quote
-	toRet[0] = getQuotesValue(bond, "92.63", "92.63", "95", "Initiator Party selected Cpt1")                               // test case 1 - 2 quotes have same value.
-	toRet[1] = getQuotesValue(bond, "91.71", "91.71", "91.71", "Initiator Party selected Cpt1")                            // test case 2
-	toRet[2] = getQuotesValue(bond, "0", "0", "0", "Generate proof fails - all quotes are zero")                           // test case 10
-	toRet[3] = getQuotesValue(bond, "92.63", "92.63", "92.63", "Initiator Party selected Cpt1")                            // test case 2
-	toRet[4] = getQuotesValue(bond, "97.63", "94.63", "95.63", "Generate proof fails - Initiator selected a higher quote") // test case 8
-	toRet[5] = getQuotesValue(bond, "-97.63", "-94.63", "-95.63", "Generate proof fails - Negative quotes")                // test case 11
+	toRet[i++] = getQuotesValue(bond, "92.63", "92.63",
+		"95", "Initiator Party selected Cpt1") // test case 1 - 2 quotes have same value.
+	toRet[i++] = getQuotesValue(bond, "91.71", "91.71",
+		"91.71", "Initiator Party selected Cpt1") // test case 2
+	toRet[i++] = getQuotesValue(bond, "0", "0", "0",
+		"Generate proof fails - all quotes are zero") // test case 10
+	toRet[i++] = getQuotesValue(bond, "92.63", "92.63", "92.63",
+		"Initiator Party selected Cpt1") // test case 2
+	toRet[i++] = getQuotesValue(bond, "97.63", "94.63", "95.63",
+		"Generate proof fails - Initiator selected a higher quote") // test case 8
+	toRet[i++] = getQuotesValue(bond, "-97.63", "-94.63", "-95.63",
+		"Generate proof fails - Negative quotes") // test case 11
 
 	bond = &Bond{
 		Isin:   "CA29250NAT25",
@@ -51,8 +57,8 @@ func createTestCases() [8]TestCase {
 		Ticker: "ENB 1.375 10-Sep-2025",
 	}
 
-	toRet[6] = getQuotesValue(bond, "91.63", "92.63", "95.63", "Initiator Party selects the smallest quote")
-	toRet[7] = getQuotesValue(bond, "93", "98", "94", "Initiator Party selects the smallest integer quote")
+	toRet[i++] = getQuotesValue(bond, "91.63", "92.63", "95.63", "Initiator Party selects the smallest quote")
+	toRet[i++] = getQuotesValue(bond, "93", "98", "94", "Initiator Party selects the smallest integer quote")
 
 	return toRet
 }
