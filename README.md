@@ -50,3 +50,21 @@ Strong belief that [Baseline protocol](https://github.com/eea-oasis/baseline/blo
 gnark has not been fully audit yet and is provided “as-is” we might encounter some challenges/blockers that will require assistance from the gnark/ConsenSys team.
 
 We might find limitations in gnark circuit development, that might require more time to build than initially planned.
+
+## ZKP
+
+[1] Which parties should be aware of the zk circuit source code?
+Coded by Initiator and all counter parties in scope agrees with the algorithm
+
+[2] What are you trying to prove (via zk proof)?
+- smallest quote was accepted (in this scenario)
+- all quotes come from only counter parties in scope 
+
+[3] Who are you trying to prove something to?
+Only the accepted counter party knows its quote was accepted.
+
+[4] What are you trying to conceal (private inputs in zk proof)?
+It conceals the quotes
+
+[5] Who are you trying to conceal private inputs from?
+Counter parties don't know each other quotes.
