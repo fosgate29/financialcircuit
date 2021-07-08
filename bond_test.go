@@ -25,6 +25,7 @@ func TestBondv(t *testing.T) {
 	// compiles our circuit into a R1CS
 	fmt.Println("Compiling Bond circuit")
 	r1cs, err := frontend.Compile(ecc.BN254, backend.GROTH16, &circuit)
+
 	fmt.Println("Setting up circuit - it will take some time")
 	pk, vk, err := groth16.Setup(r1cs)
 	fmt.Println("pk and vk created. Now starting testing:")
@@ -44,6 +45,8 @@ func TestBondv(t *testing.T) {
 		fmt.Println("Test", i, "- Cpt1 Quote:", testCase.quoteNumberCpt1, "- Cpt2 Quote:",
 			testCase.quoteNumberCpt2, "- Cpt3 Quote:",
 			testCase.quoteNumberCpt3, "-", testCase.message)
+		fmt.Println()
+
 		/*
 		* Hash and Signatures
 		 */

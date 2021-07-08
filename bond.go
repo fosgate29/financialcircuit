@@ -72,12 +72,12 @@ type bondCircuit struct {
 func (circuit *bondCircuit) Define(curveID ecc.ID, cs *frontend.ConstraintSystem) error {
 
 	// All quotes should be greater than zero
-	checkZero1 := cs.IsZero(circuit.QuoteFromCpt1, curveID)
-	checkZero2 := cs.IsZero(circuit.QuoteFromCpt2, curveID)
-	checkZero3 := cs.IsZero(circuit.QuoteFromCpt3, curveID)
+	checkZeroCpt1 := cs.IsZero(circuit.QuoteFromCpt1, curveID)
+	checkZeroCpt2 := cs.IsZero(circuit.QuoteFromCpt2, curveID)
+	checkZeroCpt3 := cs.IsZero(circuit.QuoteFromCpt3, curveID)
 
-	checkZero_temp := cs.Or(checkZero1, checkZero2)
-	checkZero_result := cs.Or(checkZero_temp, checkZero3)
+	checkZero_temp := cs.Or(checkZeroCpt1, checkZeroCpt2)
+	checkZero_result := cs.Or(checkZero_temp, checkZeroCpt3)
 
 	cs.AssertIsEqual(checkZero_result, 0)
 
@@ -88,17 +88,17 @@ func (circuit *bondCircuit) Define(curveID ecc.ID, cs *frontend.ConstraintSystem
 
 	// If winner quote is from Cpt1, Cpt2 or Cpt3, one of the subtraction is going to return zero
 	// The circuit is build with all quotes received from responders
-	subA := cs.Sub(circuit.QuoteFromCpt1, circuit.AcceptedQuote)
-	subB := cs.Sub(circuit.QuoteFromCpt2, circuit.AcceptedQuote)
-	subC := cs.Sub(circuit.QuoteFromCpt3, circuit.AcceptedQuote)
+	subCpt1 := cs.Sub(circuit.QuoteFromCpt1, circuit.AcceptedQuote)
+	subCpt2 := cs.Sub(circuit.QuoteFromCpt2, circuit.AcceptedQuote)
+	subCpt3 := cs.Sub(circuit.QuoteFromCpt3, circuit.AcceptedQuote)
 
-	outputA := cs.IsZero(subA, curveID) // 1 - iszero - true
-	outputB := cs.IsZero(subB, curveID) // 0 false
-	outputC := cs.IsZero(subC, curveID) // 0 false
+	outputCpt1 := cs.IsZero(subCpt1, curveID) // 1 - iszero - true
+	outputCpt2 := cs.IsZero(subCpt2, curveID) // 0 false
+	outputCpt3 := cs.IsZero(subCpt3, curveID) // 0 false
 
-	// outputA || outputB || outputC == 1
-	result_temp := cs.Or(outputA, outputB)
-	result := cs.Or(result_temp, outputC)
+	// outputCpt1 || outputCpt2 || outputCpt3 == 1
+	result_temp := cs.Or(outputCpt1, outputCpt2)
+	result := cs.Or(result_temp, outputCpt3)
 
 	one := cs.Constant(1)
 	cs.AssertIsEqual(result, one)
@@ -123,18 +123,18 @@ func (circuit *bondCircuit) Define(curveID ecc.ID, cs *frontend.ConstraintSystem
 
 	//check Isin + quote
 	mimc, _ := mimc.NewMiMC("seed", curveID)
-	IsinQuoteFromAHash := mimc.Hash(cs, circuit.Bond, circuit.QuoteFromCpt1)
-	IsinQuoteFromBHash := mimc.Hash(cs, circuit.Bond, circuit.QuoteFromCpt2)
-	IsinQuoteFromCHash := mimc.Hash(cs, circuit.Bond, circuit.QuoteFromCpt3)
+	IsinQuoteFromCpt1Hash := mimc.Hash(cs, circuit.Bond, circuit.QuoteFromCpt1)
+	IsinQuoteFromCpt2Hash := mimc.Hash(cs, circuit.Bond, circuit.QuoteFromCpt2)
+	IsinQuoteFromCpt3Hash := mimc.Hash(cs, circuit.Bond, circuit.QuoteFromCpt3)
 
 	circuit.PublicKeyCpt1.Curve = params
-	eddsa.Verify(cs, circuit.BondQuoteSignedCpt1, IsinQuoteFromAHash, circuit.PublicKeyCpt1)
+	eddsa.Verify(cs, circuit.BondQuoteSignedCpt1, IsinQuoteFromCpt1Hash, circuit.PublicKeyCpt1)
 
 	circuit.PublicKeyCpt2.Curve = params
-	eddsa.Verify(cs, circuit.BondQuoteSignedCpt2, IsinQuoteFromBHash, circuit.PublicKeyCpt2)
+	eddsa.Verify(cs, circuit.BondQuoteSignedCpt2, IsinQuoteFromCpt2Hash, circuit.PublicKeyCpt2)
 
 	circuit.PublicKeyCpt3.Curve = params
-	eddsa.Verify(cs, circuit.BondQuoteSignedCpt3, IsinQuoteFromCHash, circuit.PublicKeyCpt3)
+	eddsa.Verify(cs, circuit.BondQuoteSignedCpt3, IsinQuoteFromCpt3Hash, circuit.PublicKeyCpt3)
 
 	return nil
 }
