@@ -191,7 +191,7 @@ func TestBondv(t *testing.T) {
 
 		if err != nil {
 
-			fmt.Println("Test", i, "fails")
+			//fmt.Println("Test", i, "fails")
 
 		} else {
 
