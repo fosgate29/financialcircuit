@@ -1,3 +1,5 @@
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+
 # Financial Circuit
 
 Writing zero-knowledge circuits using gnark to expand the existing library – Focus on Financial Circuit Development and Approach
