@@ -1,12 +1,15 @@
 package financial
 
 import (
+	"bytes"
 	"fmt"
 	"math/big"
 	"math/rand"
+	"os"
 	"testing"
 
 	"github.com/consensys/gnark-crypto/ecc"
+	"github.com/consensys/gnark-crypto/ecc/bn254/fp"
 	eddsabn254 "github.com/consensys/gnark-crypto/ecc/bn254/twistededwards/eddsa"
 	"github.com/consensys/gnark-crypto/hash"
 	"github.com/consensys/gnark-crypto/signature"
@@ -14,6 +17,13 @@ import (
 	"github.com/consensys/gnark/backend"
 	"github.com/consensys/gnark/backend/groth16"
 	"github.com/consensys/gnark/frontend"
+)
+
+const (
+	r1csPath     = "circuit/bond.r1cs"
+	pkPath       = "circuit/bond.pk"
+	vkPath       = "circuit/bond.vk"
+	solidityPath = "circuit/bond.sol"
 )
 
 func TestBondv(t *testing.T) {
@@ -26,12 +36,25 @@ func TestBondv(t *testing.T) {
 	fmt.Println("Compiling Bond circuit")
 	r1cs, err := frontend.Compile(ecc.BN254, backend.GROTH16, &circuit)
 
+	f, err := os.Create(r1csPath)
+	_, err = r1cs.WriteTo(f)
+
 	fmt.Println("Setting up circuit - it will take some time")
 	pk, vk, err := groth16.Setup(r1cs)
 	fmt.Println("pk and vk created. Now starting testing:")
 	if err != nil {
 		t.Fatal(err)
 	}
+
+	f, err = os.Create(pkPath)
+	_, err = pk.WriteTo(f)
+
+	f, err = os.Create(vkPath)
+	_, err = vk.WriteTo(f)
+
+	fmt.Println("export solidity verifier", solidityPath)
+	f, err = os.Create(solidityPath)
+	err = vk.ExportSolidity(f)
 
 	/*
 	* Populate test cases
@@ -226,6 +249,96 @@ func TestBondv(t *testing.T) {
 			if err != nil {
 				fmt.Print(err)
 			}
+
+			var (
+				a     [2]*big.Int
+				b     [2][2]*big.Int
+				c     [2]*big.Int
+				input [12]*big.Int
+			)
+
+			// get proof bytes
+			var buf bytes.Buffer
+			proof.WriteRawTo(&buf)
+			proofBytes := buf.Bytes()
+
+			// proof.Ar, proof.Bs, proof.Krs
+			const fpSize = fp.Bytes
+			a[0] = new(big.Int).SetBytes(proofBytes[fpSize*0 : fpSize*1])
+			a[1] = new(big.Int).SetBytes(proofBytes[fpSize*1 : fpSize*2])
+			b[0][0] = new(big.Int).SetBytes(proofBytes[fpSize*2 : fpSize*3])
+			b[0][1] = new(big.Int).SetBytes(proofBytes[fpSize*3 : fpSize*4])
+			b[1][0] = new(big.Int).SetBytes(proofBytes[fpSize*4 : fpSize*5])
+			b[1][1] = new(big.Int).SetBytes(proofBytes[fpSize*5 : fpSize*6])
+			c[0] = new(big.Int).SetBytes(proofBytes[fpSize*6 : fpSize*7])
+			c[1] = new(big.Int).SetBytes(proofBytes[fpSize*7 : fpSize*8])
+
+			// public witness
+			/*
+				AcceptedQuoteQuery  frontend.Variable `gnark:",public"`  // 92.63
+				AcceptedQuoteSigned Signature         `gnark:",public"`  // to prevent spam
+				PublicKeyCpt1       PublicKey         `gnark:",public"`  // Public key to check quotes signed - The reason for the public keys is to confirm who participated in providing quotes
+				PublicKeyCpt2       PublicKey         `gnark:",public"`  // Public key to check quotes signed
+				PublicKeyCpt3       PublicKey         `gnark:",public"`  // Public key to check quotes signed
+				Bond                frontend.Variable `gnark:",public"`  // hash of Isin, Ticker and Size
+			*/
+			input[0] = new(big.Int).SetBytes(testCase.acceptedQuote)
+
+			/*
+				witnessCorrectValue.AcceptedQuoteSigned.R.X.Assign(sigRx)
+				witnessCorrectValue.AcceptedQuoteSigned.R.Y.Assign(sigRy)
+				witnessCorrectValue.AcceptedQuoteSigned.S1.Assign(sigS1)
+				witnessCorrectValue.AcceptedQuoteSigned.S2.Assign(sigS2)
+			*/
+			input[1] = new(big.Int).SetBytes(sigRx)
+			input[2] = new(big.Int).SetBytes(sigRy)
+			input[3] = new(big.Int).SetBytes(sigS1)
+			input[4] = new(big.Int).SetBytes(sigS2)
+
+			/*
+				witnessCorrectValue.PublicKeyCpt1.A.X.Assign(pubkeyAx)
+				witnessCorrectValue.PublicKeyCpt1.A.Y.Assign(pubkeyAy)
+			*/
+			input[5] = new(big.Int).SetBytes(pubkeyAx)
+			input[6] = new(big.Int).SetBytes(pubkeyAy)
+
+			/*
+
+				witnessCorrectValue.PublicKeyCpt2.A.X.Assign(pubkeyBAx)
+				witnessCorrectValue.PublicKeyCpt2.A.Y.Assign(pubkeyBAy)
+
+			*/
+			input[7] = new(big.Int).SetBytes(pubkeyBAx)
+			input[8] = new(big.Int).SetBytes(pubkeyBAy)
+
+			/*
+
+				witnessCorrectValue.PublicKeyCpt3.A.X.Assign(pubkeyCAx)
+				witnessCorrectValue.PublicKeyCpt3.A.Y.Assign(pubkeyCAy)
+			*/
+			input[9] = new(big.Int).SetBytes(pubkeyCAx)
+			input[10] = new(big.Int).SetBytes(pubkeyCAy)
+
+			input[11] = new(big.Int).SetBytes(IsinHash)
+
+			for j := 0; j < 12; j++ {
+				fmt.Println(input[j])
+			}
+			fmt.Println("--")
+			fmt.Println(a[0])
+			fmt.Println(a[1])
+
+			fmt.Println("--")
+			fmt.Println(b[0][0])
+			fmt.Println(b[0][1])
+			fmt.Println(b[1][0])
+			fmt.Println(b[1][1])
+
+			fmt.Println("--")
+			fmt.Println(c[0])
+			fmt.Println(c[1])
+
+			fmt.Println("--")
 		}
 	}
 }
