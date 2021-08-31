@@ -112,8 +112,7 @@ you need the values below to test the Verifier:
 "6612373535961598771650885752291845037020624862878415527266403582563356930501"]
 
 Here is the printscreen of how Remix would show:
-
-
+![Example](./doc/RemixExample.png)
 
 ## License
 
