@@ -136,22 +136,22 @@ func TestBondv(t *testing.T) {
 		BondQuoteSignedCpt3, err := privKeyCpt3.Sign(IsinQuoteCpt3Hashed[:], hFunc)
 
 		sigRxt, sigRyt, sigS1t, sigS2t := parseSignature(id, BondQuoteSignedCpt1)
-		witness.BondQuoteSignedCpt1.R.X.Assign(sigRxt)
-		witness.BondQuoteSignedCpt1.R.Y.Assign(sigRyt)
-		witness.BondQuoteSignedCpt1.S1.Assign(sigS1t)
-		witness.BondQuoteSignedCpt1.S2.Assign(sigS2t)
+		witness.BondQuoteSignedCpts[0].R.X.Assign(sigRxt)
+		witness.BondQuoteSignedCpts[0].R.Y.Assign(sigRyt)
+		witness.BondQuoteSignedCpts[0].S1.Assign(sigS1t)
+		witness.BondQuoteSignedCpts[0].S2.Assign(sigS2t)
 
 		sigRxt, sigRyt, sigS1t, sigS2t = parseSignature(id, BondQuoteSignedCpt2)
-		witness.BondQuoteSignedCpt2.R.X.Assign(sigRxt)
-		witness.BondQuoteSignedCpt2.R.Y.Assign(sigRyt)
-		witness.BondQuoteSignedCpt2.S1.Assign(sigS1t)
-		witness.BondQuoteSignedCpt2.S2.Assign(sigS2t)
+		witness.BondQuoteSignedCpts[1].R.X.Assign(sigRxt)
+		witness.BondQuoteSignedCpts[1].R.Y.Assign(sigRyt)
+		witness.BondQuoteSignedCpts[1].S1.Assign(sigS1t)
+		witness.BondQuoteSignedCpts[1].S2.Assign(sigS2t)
 
 		sigRxt, sigRyt, sigS1t, sigS2t = parseSignature(id, BondQuoteSignedCpt3)
-		witness.BondQuoteSignedCpt3.R.X.Assign(sigRxt)
-		witness.BondQuoteSignedCpt3.R.Y.Assign(sigRyt)
-		witness.BondQuoteSignedCpt3.S1.Assign(sigS1t)
-		witness.BondQuoteSignedCpt3.S2.Assign(sigS2t)
+		witness.BondQuoteSignedCpts[2].R.X.Assign(sigRxt)
+		witness.BondQuoteSignedCpts[2].R.Y.Assign(sigRyt)
+		witness.BondQuoteSignedCpts[2].S1.Assign(sigS1t)
+		witness.BondQuoteSignedCpts[2].S2.Assign(sigS2t)
 
 		AcceptedQuoteSigned, err := privKeyCpt1.Sign(testCase.acceptedQuote[:], hFunc)
 
@@ -162,57 +162,57 @@ func TestBondv(t *testing.T) {
 		witness.AcceptedQuoteSigned.S2.Assign(sigS2)
 
 		witness.AcceptedQuote.Assign(testCase.acceptedQuote)
-		witness.RejectedQuote1.Assign(testCase.quoteCpt2)
-		witness.RejectedQuote2.Assign(testCase.quoteCpt3)
+		witness.RejectedQuotes[0].Assign(testCase.quoteCpt2)
+		witness.RejectedQuotes[1].Assign(testCase.quoteCpt3)
 
-		witness.QuoteFromCpt1.Assign(QuoteFromCpt1)
-		witness.QuoteFromCpt2.Assign(QuoteFromCpt2)
-		witness.QuoteFromCpt3.Assign(QuoteFromCpt3)
+		witness.QuoteFromCpts[0].Assign(QuoteFromCpt1)
+		witness.QuoteFromCpts[1].Assign(QuoteFromCpt2)
+		witness.QuoteFromCpts[2].Assign(QuoteFromCpt3)
 
 		//A
 		pubkeyAx, pubkeyAy := parsePoint(id, pubKeyCpt1.Bytes())
 		var pbAx, pbAy big.Int
 		pbAx.SetBytes(pubkeyAx)
 		pbAy.SetBytes(pubkeyAy)
-		witness.PublicKeyCpt1.A.X.Assign(pubkeyAx)
-		witness.PublicKeyCpt1.A.Y.Assign(pubkeyAy)
+		witness.PublicKeyCpts[0].A.X.Assign(pubkeyAx)
+		witness.PublicKeyCpts[0].A.Y.Assign(pubkeyAy)
 
 		witness.AcceptedQuotePubKey.A.X.Assign(pubkeyAx)
 		witness.AcceptedQuotePubKey.A.Y.Assign(pubkeyAy)
 
 		sigRx, sigRy, sigS1, sigS2 = parseSignature(id, signatureCpt1)
-		witness.SignatureCpt1.R.X.Assign(sigRx)
-		witness.SignatureCpt1.R.Y.Assign(sigRy)
-		witness.SignatureCpt1.S1.Assign(sigS1)
-		witness.SignatureCpt1.S2.Assign(sigS2)
+		witness.SignatureCpts[0].R.X.Assign(sigRx)
+		witness.SignatureCpts[0].R.Y.Assign(sigRy)
+		witness.SignatureCpts[0].S1.Assign(sigS1)
+		witness.SignatureCpts[0].S2.Assign(sigS2)
 
 		//B
 		pubkeyBAx, pubkeyBAy := parsePoint(id, pubKeyBCpt2.Bytes())
 		var pbBAx, pbBAy big.Int
 		pbBAx.SetBytes(pubkeyBAx)
 		pbBAy.SetBytes(pubkeyBAy)
-		witness.PublicKeyCpt2.A.X.Assign(pubkeyBAx)
-		witness.PublicKeyCpt2.A.Y.Assign(pubkeyBAy)
+		witness.PublicKeyCpts[1].A.X.Assign(pubkeyBAx)
+		witness.PublicKeyCpts[1].A.Y.Assign(pubkeyBAy)
 
 		sigBRx, sigBRy, sigBS1, sigBS2 := parseSignature(id, signatureCpt2)
-		witness.SignatureCpt2.R.X.Assign(sigBRx)
-		witness.SignatureCpt2.R.Y.Assign(sigBRy)
-		witness.SignatureCpt2.S1.Assign(sigBS1)
-		witness.SignatureCpt2.S2.Assign(sigBS2)
+		witness.SignatureCpts[1].R.X.Assign(sigBRx)
+		witness.SignatureCpts[1].R.Y.Assign(sigBRy)
+		witness.SignatureCpts[1].S1.Assign(sigBS1)
+		witness.SignatureCpts[1].S2.Assign(sigBS2)
 
 		//C
 		pubkeyCAx, pubkeyCAy := parsePoint(id, pubKeyCpt3.Bytes())
 		var pbCAx, pbCAy big.Int
 		pbCAx.SetBytes(pubkeyCAx)
 		pbCAy.SetBytes(pubkeyCAy)
-		witness.PublicKeyCpt3.A.X.Assign(pubkeyCAx)
-		witness.PublicKeyCpt3.A.Y.Assign(pubkeyCAy)
+		witness.PublicKeyCpts[2].A.X.Assign(pubkeyCAx)
+		witness.PublicKeyCpts[2].A.Y.Assign(pubkeyCAy)
 
 		sigCRx, sigCRy, sigCS1, sigCS2 := parseSignature(id, signatureCpt3)
-		witness.SignatureCpt3.R.X.Assign(sigCRx)
-		witness.SignatureCpt3.R.Y.Assign(sigCRy)
-		witness.SignatureCpt3.S1.Assign(sigCS1)
-		witness.SignatureCpt3.S2.Assign(sigCS2)
+		witness.SignatureCpts[2].R.X.Assign(sigCRx)
+		witness.SignatureCpts[2].R.Y.Assign(sigCRy)
+		witness.SignatureCpts[2].S1.Assign(sigCS1)
+		witness.SignatureCpts[2].S2.Assign(sigCS2)
 
 		// Generate Proof
 		proof, err := groth16.Prove(r1cs, pk, &witness)
@@ -238,14 +238,14 @@ func TestBondv(t *testing.T) {
 			witnessCorrectValue.AcceptedQuoteSigned.S1.Assign(sigS1)
 			witnessCorrectValue.AcceptedQuoteSigned.S2.Assign(sigS2)
 
-			witnessCorrectValue.PublicKeyCpt1.A.X.Assign(pubkeyAx)
-			witnessCorrectValue.PublicKeyCpt1.A.Y.Assign(pubkeyAy)
+			witnessCorrectValue.PublicKeyCpts[0].A.X.Assign(pubkeyAx)
+			witnessCorrectValue.PublicKeyCpts[0].A.Y.Assign(pubkeyAy)
 
-			witnessCorrectValue.PublicKeyCpt2.A.X.Assign(pubkeyBAx)
-			witnessCorrectValue.PublicKeyCpt2.A.Y.Assign(pubkeyBAy)
+			witnessCorrectValue.PublicKeyCpts[1].A.X.Assign(pubkeyBAx)
+			witnessCorrectValue.PublicKeyCpts[1].A.Y.Assign(pubkeyBAy)
 
-			witnessCorrectValue.PublicKeyCpt3.A.X.Assign(pubkeyCAx)
-			witnessCorrectValue.PublicKeyCpt3.A.Y.Assign(pubkeyCAy)
+			witnessCorrectValue.PublicKeyCpts[2].A.X.Assign(pubkeyCAx)
+			witnessCorrectValue.PublicKeyCpts[2].A.Y.Assign(pubkeyCAy)
 
 			err = groth16.Verify(proof, vk, &witnessCorrectValue)
 			if err != nil {
