@@ -39,7 +39,7 @@ func TestBondv(t *testing.T) {
 	f, err := os.Create(r1csPath)
 	_, err = r1cs.WriteTo(f)
 
-	fmt.Println("Setting up circuit - it will take some time")
+	fmt.Println("Setting up circuit - This step will take about 30 seconds")
 	pk, vk, err := groth16.Setup(r1cs)
 	fmt.Println("pk and vk created. Now starting testing:")
 	if err != nil {

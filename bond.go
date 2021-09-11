@@ -69,6 +69,7 @@ type bondCircuit struct {
 	BondQuoteSignedCpt3 Signature         `gnark:",private"` // Sign(Bond hash, quote)
 }
 
+// this function is called on set up/compile
 func (circuit *bondCircuit) Define(curveID ecc.ID, cs *frontend.ConstraintSystem) error {
 
 	// All quotes should be greater than zero
@@ -111,7 +112,8 @@ func (circuit *bondCircuit) Define(curveID ecc.ID, cs *frontend.ConstraintSystem
 	circuit.AcceptedQuotePubKey.Curve = params
 	eddsa.Verify(cs, circuit.AcceptedQuoteSigned, circuit.AcceptedQuote, circuit.AcceptedQuotePubKey)
 
-	// verify the signature in the cs for A,B,C
+	// verify the signature in the cs for Cpt1, Cpt2, Cpt3
+	// verify that the quote quote1 came from the associated cpt1
 	circuit.PublicKeyCpt1.Curve = params
 	eddsa.Verify(cs, circuit.SignatureCpt1, circuit.QuoteFromCpt1, circuit.PublicKeyCpt1)
 
@@ -127,6 +129,7 @@ func (circuit *bondCircuit) Define(curveID ecc.ID, cs *frontend.ConstraintSystem
 	IsinQuoteFromCpt2Hash := mimc.Hash(cs, circuit.Bond, circuit.QuoteFromCpt2)
 	IsinQuoteFromCpt3Hash := mimc.Hash(cs, circuit.Bond, circuit.QuoteFromCpt3)
 
+	// the quote is valid only for that bond and the cpt1
 	circuit.PublicKeyCpt1.Curve = params
 	eddsa.Verify(cs, circuit.BondQuoteSignedCpt1, IsinQuoteFromCpt1Hash, circuit.PublicKeyCpt1)
 
