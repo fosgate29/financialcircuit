@@ -10,8 +10,10 @@ import (
 )
 
 // PublicKey stores an eddsa public key (to be used in gnark circuit)
-//required to verify signatures in gnark
+// required to verify signatures in gnark
 type PublicKey = eddsa.PublicKey
+
+// Signature
 type Signature = eddsa.Signature
 
 func parseSignature(id ecc.ID, buf []byte) ([]byte, []byte, []byte, []byte) {
@@ -68,10 +70,10 @@ func (circuit *bondCircuit) Define(curveID ecc.ID, cs *frontend.ConstraintSystem
 	checkZeroCpt2 := cs.IsZero(circuit.QuoteFromCpts[1], curveID)
 	checkZeroCpt3 := cs.IsZero(circuit.QuoteFromCpts[2], curveID)
 
-	checkZero_temp := cs.Or(checkZeroCpt1, checkZeroCpt2)
-	checkZero_result := cs.Or(checkZero_temp, checkZeroCpt3)
+	checkZeroTemp := cs.Or(checkZeroCpt1, checkZeroCpt2)
+	checkZeroResult := cs.Or(checkZeroTemp, checkZeroCpt3)
 
-	cs.AssertIsEqual(checkZero_result, 0)
+	cs.AssertIsEqual(checkZeroResult, 0)
 
 	// Make sure Winner Quote is the smallest one or matching the bid
 	cs.AssertIsLessOrEqual(circuit.AcceptedQuote, circuit.RejectedQuotes[0])
@@ -90,8 +92,8 @@ func (circuit *bondCircuit) Define(curveID ecc.ID, cs *frontend.ConstraintSystem
 	outputCpt3 := cs.IsZero(subCpt3, curveID)
 
 	// outputCpt1 || outputCpt2 || outputCpt3 == 1
-	result_temp := cs.Or(outputCpt1, outputCpt2)
-	result := cs.Or(result_temp, outputCpt3)
+	resultTemp := cs.Or(outputCpt1, outputCpt2)
+	result := cs.Or(resultTemp, outputCpt3)
 
 	one := cs.Constant(1)
 	cs.AssertIsEqual(result, one)

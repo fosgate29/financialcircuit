@@ -32,6 +32,7 @@ func TestBondv(t *testing.T) {
 	*  First step: Compile and Setup circuit.
 	 */
 	var circuit bondCircuit
+	var err error
 	// compiles our circuit into a R1CS
 	fmt.Println("Compiling Bond circuit")
 	r1cs, err := frontend.Compile(ecc.BN254, backend.GROTH16, &circuit)

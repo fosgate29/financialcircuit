@@ -8,6 +8,7 @@ import (
 	"github.com/shopspring/decimal"
 )
 
+// Represent a test case
 type TestCase struct {
 	quoteCpt1       []byte
 	quoteCpt2       []byte
@@ -20,6 +21,7 @@ type TestCase struct {
 	message         string
 }
 
+// Bond has an Isin, size and ticker
 type Bond struct {
 	Isin   string
 	Size   string
