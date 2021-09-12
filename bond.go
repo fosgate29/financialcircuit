@@ -84,9 +84,10 @@ func (circuit *bondCircuit) Define(curveID ecc.ID, cs *frontend.ConstraintSystem
 	subCpt2 := cs.Sub(circuit.QuoteFromCpts[1], circuit.AcceptedQuote)
 	subCpt3 := cs.Sub(circuit.QuoteFromCpts[2], circuit.AcceptedQuote)
 
-	outputCpt1 := cs.IsZero(subCpt1, curveID) // 1 - iszero - true
-	outputCpt2 := cs.IsZero(subCpt2, curveID) // 0 false
-	outputCpt3 := cs.IsZero(subCpt3, curveID) // 0 false
+	// 1 - it is zero, so it is true. If 0, it isn't zero and is false
+	outputCpt1 := cs.IsZero(subCpt1, curveID)
+	outputCpt2 := cs.IsZero(subCpt2, curveID)
+	outputCpt3 := cs.IsZero(subCpt3, curveID)
 
 	// outputCpt1 || outputCpt2 || outputCpt3 == 1
 	result_temp := cs.Or(outputCpt1, outputCpt2)
