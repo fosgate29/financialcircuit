@@ -4,7 +4,7 @@
 
 # Financial Circuit
 
-Writing zero-knowledge circuits using gnark to expand the existing library – Focus on Financial Circuit Development and Approach
+Writing zero-knowledge circuits using `gnark` to expand the existing library – Focus on Financial Circuit Development and Approach
 
 ## Technologies Used 
 
@@ -45,15 +45,10 @@ Strong belief that [Baseline protocol](https://github.com/eea-oasis/baseline/blo
 
 **Specific expected project benefits:**
 
-* Research and build financial circuits using gnark. Steps and challenges to build this application will be documented and made available.
+* Research and build financial circuits using `gnark`. Steps and challenges to build this application will be documented and made available.
 * Building a Baselined – private, cost effective and regulatory conforming trade circuits/confirmation process, for OTC instruments in scope.
   Presently users need to pay for TRACE data and for services to complete EOD trade    reconciliation with Front Office Blotters.
 * Gives a  chance/opportunity to smaller participants who can’t afford Bloomberg service and require a safe, inexpensive, audited and baselined/confirmation process.
-
-## Risks
-gnark has not been fully audit yet and is provided “as-is” we might encounter some challenges/blockers that will require assistance from the gnark/ConsenSys team.
-
-We might find limitations in gnark circuit development, that might require more time to build than initially planned.
 
 ## ZKP
 
