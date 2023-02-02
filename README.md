@@ -1,6 +1,6 @@
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![Go Report Card](https://goreportcard.com/badge/github.com/fosgate29/financialcircuit)](https://goreportcard.com/report/github.com/fosgate29/financialcircuit)
-[![CircleCI](https://circleci.com/gh/fosgate29/financialcircuit/tree/development.svg?style=svg)](https://circleci.com/gh/fosgate29/financialcircuit/tree/development)
+[![CircleCI](https://dl.circleci.com/status-badge/img/gh/fosgate29/financialcircuit/tree/dev.svg?style=svg)](https://dl.circleci.com/status-badge/redirect/gh/fosgate29/financialcircuit/tree/dev)
 
 # Financial Circuit
 
