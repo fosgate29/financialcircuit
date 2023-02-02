@@ -12,7 +12,7 @@ jobs:
             - go-mod-v4-{{ checksum "go.sum" }}
       - run:
           name: Install Dependencies
-          command: go mod download
+          command: $HOME/go mod download
       - save_cache:
           key: go-mod-v4-{{ checksum "go.sum" }}
           paths:
@@ -20,4 +20,4 @@ jobs:
       - run:
           name: Run tests
           command: |
-            go test
+            $HOME/go test
