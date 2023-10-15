@@ -8,7 +8,7 @@ Writing zero-knowledge circuits using `gnark` to expand the existing library –
 
 ## Technologies Used 
 
-* [Gnark 0.4](https://docs.gnark.consensys.net/en/latest/)
+* [Gnark 0.4](https://github.com/ConsenSys/doc.gnark/tree/0.4.0)
 * [Baseline](https://github.com/eea-oasis/baseline)
 
 # Diagram
